@@ -29,6 +29,7 @@ const clearKeyButton = $<HTMLButtonElement>("clearKey");
 const settingsPanel = $<HTMLElement>("settingsPanel");
 const authState = $<HTMLElement>("authState");
 const authText = $<HTMLElement>("authText");
+const boundBadge = $<HTMLElement>("boundBadge");
 const contextBanner = $<HTMLElement>("contextBanner");
 const contextText = $<HTMLElement>("contextText");
 const imagePreview = $<HTMLImageElement>("imagePreview");
@@ -76,12 +77,18 @@ function updateAuth(): void {
   const bound = Boolean(settings.user);
   if (bound) {
     authState.textContent = "已绑定";
+    const label = document.createElement("span");
+    label.className = "muted";
+    label.textContent = "已绑定 ";
     const username = document.createElement("span");
     username.className = "bound-user";
     username.textContent = `@${settings.user?.username}`;
-    authText.replaceChildren("已绑定 ", username, "，收录归属本人。");
+    boundBadge.replaceChildren(label, username);
+    boundBadge.classList.remove("hidden");
+    authText.textContent = "收录归属本人。";
   } else {
     authState.textContent = "未绑定";
+    boundBadge.classList.add("hidden");
     authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
   }
   keyField.classList.toggle("hidden", bound);
