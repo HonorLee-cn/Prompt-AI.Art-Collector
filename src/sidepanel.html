@@ -30,18 +30,6 @@
 
         <div id="settingsPanel" class="settings hidden">
           <label
-            >API 地址<input
-              id="apiBase"
-              type="url"
-              placeholder="http://localhost:3000"
-          /></label>
-          <label
-            >站点地址<input
-              id="webBase"
-              type="url"
-              placeholder="http://localhost:5173"
-          /></label>
-          <label
             >API Key<input
               id="apiKey"
               type="password"
@@ -53,9 +41,17 @@
             </button>
             <button id="clearKey" class="ghost" type="button">解除绑定</button>
           </div>
+          <button id="getApiKey" class="ghost full" type="button">
+            获取 API KEY
+          </button>
           <p class="muted tiny">
             Key 只保存在本机 chrome.storage.local，不会发送到其他服务。
           </p>
+        </div>
+
+        <div id="queueRow" class="row-between hidden">
+          <span id="queueText" class="muted tiny"></span>
+          <button id="retryQueue" class="link" type="button">重试队列</button>
         </div>
       </section>
 
@@ -113,47 +109,32 @@
           >English prompt<textarea id="promptEn" rows="3"></textarea>
         </label>
         <label>反向提示词<input id="negativePrompt" type="text" /></label>
-        <label
-          >标签（逗号分隔）<input
-            id="tags"
-            type="text"
-            placeholder="霓虹, cinematic"
-        /></label>
-        <div class="grid-2">
-          <label
-            >NSFW
-            <select id="nsfwLevel">
-              <option value="0">0 · SFW</option>
-              <option value="1">1 · Suggestive</option>
-              <option value="2">2 · NSFW</option>
-            </select>
-          </label>
-          <label class="check-label"
-            ><input id="publish" type="checkbox" /> 提交后申请公开</label
-          >
+        <div class="field-label">标签</div>
+        <div class="tag-picker">
+          <div id="selectedTags" class="tag-chips"></div>
+          <input id="tagDraft" type="text" placeholder="输入新标签，回车加入" />
+          <div class="tag-tools">
+            <input id="tagFilter" type="text" placeholder="筛选标签…" />
+            <button id="selectAllTags" class="link" type="button">全选</button>
+            <button id="invertTags" class="link" type="button">反选</button>
+            <button id="clearTags" class="link" type="button">清空</button>
+          </div>
+          <div id="tagOptions" class="tag-options"></div>
         </div>
-        <div class="grid-2">
-          <label>来源页面<input id="sourceUrl" type="url" /></label>
-          <label>来源站点<input id="sourceSite" type="text" /></label>
+
+        <div class="field-label">NSFW</div>
+        <div id="nsfwPicker" class="segmented" role="group" aria-label="NSFW">
+          <button type="button" data-level="0">SFW</button>
+          <button type="button" data-level="1">Suggestive</button>
+          <button type="button" data-level="2">NSFW</button>
         </div>
+
+        <label>来源页面<input id="sourceUrl" type="url" /></label>
         <p id="formError" class="error small hidden"></p>
         <button id="submit" class="primary full" type="button">提交收录</button>
         <p class="muted tiny">草稿自动保存在本机；关闭侧边栏不会丢失。</p>
       </section>
 
-      <section class="card">
-        <div class="row-between">
-          <h2>提交记录</h2>
-          <div class="row gap">
-            <button id="retryQueue" class="link hidden" type="button">
-              重试队列
-            </button>
-            <button id="manage" class="link" type="button">去管理</button>
-          </div>
-        </div>
-        <p id="queueText" class="muted tiny"></p>
-        <ul id="historyList" class="history"></ul>
-      </section>
     </main>
 
     <div id="toast" class="toast hidden"></div>

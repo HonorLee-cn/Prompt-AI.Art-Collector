@@ -1,15 +1,12 @@
 import {
   DEFAULT_SETTINGS,
   loadContext,
-  loadHistory,
   loadQueue,
   loadSettings,
   normalizeBase,
   refreshBadge,
-  saveHistory,
   saveQueue,
   saveSettings,
-  upsertHistory,
   type QueueItem,
   type Settings,
   type SubmitPayload,
@@ -129,7 +126,7 @@ async function submitItem(item: SubmitPayload): Promise<any> {
   });
 
   const prompt = created?.prompt;
-  if (item.publish && settings.apiKey && prompt?.id) {
+  if (settings.apiKey && prompt?.id) {
     await apiFetch(settings, `/prompts/${prompt.id}/publish`, {
       method: "POST",
     });
@@ -155,13 +152,6 @@ async function enqueue(item: SubmitPayload, error: string): Promise<void> {
     : [next, ...queue].slice(0, 20);
 
   await saveQueue(updated);
-  await upsertHistory({
-    clientRef: item.clientRef,
-    title: item.title || item.promptZh.slice(0, 40) || "未命名收录",
-    status: "queued",
-    error,
-    createdAt: now,
-  });
   await refreshBadge();
 }
 
@@ -180,15 +170,8 @@ async function processQueue(
     }
 
     try {
-      const prompt = await submitItem(item);
+      await submitItem(item);
       processed += 1;
-      await upsertHistory({
-        clientRef: item.clientRef,
-        title: item.title || item.promptZh.slice(0, 40) || "未命名收录",
-        status: "submitted",
-        promptId: prompt?.id,
-        createdAt: item.createdAt,
-      });
     } catch (error) {
       processed += 1;
       const apiError =
@@ -207,21 +190,6 @@ async function processQueue(
           attempts,
           nextRetryAt: Date.now() + delay,
           lastError: apiError.message,
-        });
-        await upsertHistory({
-          clientRef: item.clientRef,
-          title: item.title || item.promptZh.slice(0, 40) || "未命名收录",
-          status: "queued",
-          error: apiError.message,
-          createdAt: item.createdAt,
-        });
-      } else {
-        await upsertHistory({
-          clientRef: item.clientRef,
-          title: item.title || item.promptZh.slice(0, 40) || "未命名收录",
-          status: "failed",
-          error: apiError.message,
-          createdAt: item.createdAt,
         });
       }
     }
@@ -297,6 +265,7 @@ async function openPanel(tabId?: number): Promise<void> {
 }
 
 async function initialize(): Promise<void> {
+  await chrome.storage.local.remove("history");
   try {
     await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   } catch {
@@ -368,13 +337,12 @@ chrome.runtime.onMessage.addListener(
       try {
         switch (message?.type) {
           case "GET_STATE": {
-            const [settings, queue, history, context] = await Promise.all([
+            const [settings, queue, context] = await Promise.all([
               loadSettings(),
               loadQueue(),
-              loadHistory(),
               loadContext(),
             ]);
-            sendResponse({ ok: true, settings, queue, history, context });
+            sendResponse({ ok: true, settings, queue, context });
             break;
           }
           case "SAVE_SETTINGS": {
@@ -419,13 +387,6 @@ chrome.runtime.onMessage.addListener(
             const item = message.item as SubmitPayload;
             try {
               const prompt = await submitItem(item);
-              await upsertHistory({
-                clientRef: item.clientRef,
-                title: item.title || item.promptZh.slice(0, 40) || "未命名收录",
-                status: "submitted",
-                promptId: prompt?.id,
-                createdAt: Date.now(),
-              });
               sendResponse({ ok: true, prompt });
             } catch (error) {
               const apiError =
@@ -469,6 +430,31 @@ chrome.runtime.onMessage.addListener(
           }
           case "CLEAR_CONTEXT": {
             await chrome.storage.local.remove("pendingContext");
+            sendResponse({ ok: true });
+            break;
+          }
+          case "GET_TAGS": {
+            const settings = await loadSettings();
+            let response: any;
+            try {
+              response = await apiFetch(
+                settings,
+                settings.apiKey ? "/tags/all?limit=500" : "/tags?limit=200",
+              );
+            } catch {
+              response = await apiFetch(settings, "/tags?limit=200");
+            }
+            const tags = (response?.data ?? [])
+              .map((tag: any) => String(tag?.nameZh ?? "").trim())
+              .filter(Boolean);
+            sendResponse({ ok: true, tags });
+            break;
+          }
+          case "OPEN_API_KEY_PAGE": {
+            const settings = await loadSettings();
+            await chrome.tabs.create({
+              url: `${settings.webBase}/me/api-keys`,
+            });
             sendResponse({ ok: true });
             break;
           }

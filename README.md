@@ -23,12 +23,15 @@ pnpm build:extension
 
 点击工具栏图标打开 Side Panel → “设置”：
 
-- API 地址：本地 `http://localhost:3000`，线上填你的域名。
-- 站点地址：本地 `http://localhost:5173`，线上填你的域名。
-- API Key：在 Prompt-AI.ART 用户中心 → API Key 创建并粘贴（明文只显示一次）。
-- 点“保存并验证”；Key 失效会提示，草稿保留。
+- 只配置 API Key。
+- 点「获取 API KEY」会打开网站的 API Key 页面；未登录网站会先进入登录页。
+- 本地测试默认连接：
+  - API：`http://localhost:3100`
+  - 网站：`http://localhost:5174`
+- 打包上线前，把 `src/shared.ts` 里的 `DEFAULT_SETTINGS` 统一改为正式域名。
+- API Key 失效会提示，草稿保留。
 
-不绑定 Key 也可提交：会匿名进入后台待审核区（归属 system）。绑定后收录归属本人。
+不绑定 Key 也可提交：会匿名进入后台待审核区（归属 system）。绑定后收录归属本人，提交后默认进入待审核队列，不再自动公开。
 
 ## 图片获取顺序
 
@@ -43,7 +46,7 @@ pnpm build:extension
 
 - 网络失败/5xx/429 自动进入本机队列，指数退避重试，徽标数字只表示“待重试”，不代表审核状态。
 - 提交带 `clientRef`，服务端 `external_ref` 幂等，恢复后只提交一次。
-- 队列最多 20 条，历史保留最近 50 条。
+- 队列最多 20 条。已取消提交记录列表，只保留必要的离线重试队列。
 - 关闭 Side Panel 后草稿与队列仍在 `chrome.storage.local`。
 
 ## 权限
@@ -73,4 +76,5 @@ CRX 未上架商店时，用户需在 `chrome://extensions` 开启开发者模�
 - 5 个真实站点成功率未做自动化统计；不同站点图片防盗链/Cookie 策略可能影响读取，失败时请用右键/拖拽/手动 URL。
 - 线上 API 需允许 `chrome-extension://` Origin（服务端 CORS 已默认放行扩展 Origin）。
 - Side Panel 首次打开需用户手势（点击图标/右键/快捷键）。
-- 本扩展不显示审核状态；审核结果去网站“我的收录”查看。
+- 标签从服务端全局标签中获取，支持多选、反选和新增。
+- 本扩展不显示提交历史；审核结果去网站“我的收录”查看。

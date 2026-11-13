@@ -2,8 +2,6 @@ import { sendMessage, type Settings } from "./shared";
 
 const $ = <T extends HTMLElement>(id: string): T =>
   document.getElementById(id) as T;
-const apiBase = $<HTMLInputElement>("apiBase");
-const webBase = $<HTMLInputElement>("webBase");
 const apiKey = $<HTMLInputElement>("apiKey");
 const status = $<HTMLElement>("status");
 let settings: Settings | null = null;
@@ -14,8 +12,6 @@ async function load(): Promise<void> {
   });
   settings = response.settings ?? null;
   if (!settings) return;
-  apiBase.value = settings.apiBase;
-  webBase.value = settings.webBase;
   apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
   status.textContent = settings.user
     ? `已绑定 @${settings.user.username}`
@@ -28,8 +24,6 @@ async function save(verify: boolean): Promise<void> {
     const response = await sendMessage<{ ok: boolean; error?: string }>({
       type: "VERIFY_KEY",
       ...(key ? { apiKey: key } : {}),
-      apiBase: apiBase.value,
-      webBase: webBase.value,
     });
     status.textContent = response.ok
       ? "验证成功"
@@ -38,8 +32,6 @@ async function save(verify: boolean): Promise<void> {
     const response = await sendMessage<{ ok: boolean; settings?: Settings }>({
       type: "SAVE_SETTINGS",
       settings: {
-        apiBase: apiBase.value,
-        webBase: webBase.value,
         ...(key ? { apiKey: key } : {}),
       },
     });
@@ -52,4 +44,7 @@ async function save(verify: boolean): Promise<void> {
 
 $("save").addEventListener("click", () => void save(false));
 $("verify").addEventListener("click", () => void save(true));
+$("getApiKey").addEventListener("click", () => {
+  void sendMessage({ type: "OPEN_API_KEY_PAGE" });
+});
 void load();

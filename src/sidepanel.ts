@@ -1,11 +1,9 @@
 import {
   clearDraft,
   loadDraft,
-  normalizeBase,
   saveDraft,
   sendMessage,
   type Draft,
-  type HistoryItem,
   type PendingContext,
   type QueueItem,
   type Settings,
@@ -19,14 +17,11 @@ const $ = <T extends HTMLElement>(id: string): T => {
 
 let settings: Settings | null = null;
 let queue: QueueItem[] = [];
-let history: HistoryItem[] = [];
 let context: PendingContext | null = null;
 let imageDataUrl = "";
 let loading = true;
 let draftTimer: number | undefined;
 
-const apiBase = $<HTMLInputElement>("apiBase");
-const webBase = $<HTMLInputElement>("webBase");
 const apiKey = $<HTMLInputElement>("apiKey");
 const settingsPanel = $<HTMLElement>("settingsPanel");
 const authState = $<HTMLElement>("authState");
@@ -43,15 +38,21 @@ const titleInput = $<HTMLInputElement>("title");
 const promptZh = $<HTMLTextAreaElement>("promptZh");
 const promptEn = $<HTMLTextAreaElement>("promptEn");
 const negativePrompt = $<HTMLInputElement>("negativePrompt");
-const tagsInput = $<HTMLInputElement>("tags");
-const nsfwLevel = $<HTMLSelectElement>("nsfwLevel");
-const publishInput = $<HTMLInputElement>("publish");
 const sourceUrl = $<HTMLInputElement>("sourceUrl");
-const sourceSite = $<HTMLInputElement>("sourceSite");
+const selectedTags = $<HTMLElement>("selectedTags");
+const tagDraft = $<HTMLInputElement>("tagDraft");
+const tagFilter = $<HTMLInputElement>("tagFilter");
+const tagOptions = $<HTMLElement>("tagOptions");
+const nsfwPicker = $<HTMLElement>("nsfwPicker");
+const getApiKey = $<HTMLButtonElement>("getApiKey");
+const queueRow = $<HTMLElement>("queueRow");
+let availableTags: string[] = [];
+let selectedTagValues: string[] = [];
+let nsfwValue = 0;
+const MAX_TAGS = 10;
 const formError = $<HTMLElement>("formError");
 const queueBadge = $<HTMLElement>("queueBadge");
 const queueText = $<HTMLElement>("queueText");
-const historyList = $<HTMLUListElement>("historyList");
 const retryQueue = $<HTMLButtonElement>("retryQueue");
 const toastElement = $<HTMLElement>("toast");
 
@@ -72,12 +73,9 @@ function updateAuth(): void {
   if (settings.user) {
     authState.textContent = "已绑定";
     authText.textContent = `已绑定 @${settings.user.username}，收录归属本人。`;
-    publishInput.disabled = false;
   } else {
     authState.textContent = "未绑定";
     authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
-    publishInput.disabled = true;
-    publishInput.checked = false;
   }
 }
 
@@ -88,36 +86,81 @@ function updateBadge(): void {
     queue.length > 0
       ? `离线队列 ${queue.length} 条，联网后自动重试（角标只表示待重试）。`
       : "没有待重试的提交。";
+  queueRow.classList.toggle("hidden", queue.length === 0);
   retryQueue.classList.toggle("hidden", queue.length === 0);
 }
 
-function renderHistory(): void {
-  historyList.innerHTML = "";
-  for (const item of history.slice(0, 10)) {
-    const li = document.createElement("li");
-    const title = document.createElement("span");
-    title.className = "title";
-    title.textContent = item.title;
-    const status = document.createElement("span");
-    status.className = `status-${item.status}`;
-    status.textContent =
-      item.status === "submitted"
-        ? "已提交"
-        : item.status === "queued"
-          ? "待重试"
-          : "失败";
-    status.title = item.error ?? "";
-    li.append(title, status);
-    historyList.append(li);
+function renderTags(): void {
+  selectedTags.innerHTML = "";
+  if (nsfwPicker) {
+    for (const button of nsfwPicker.querySelectorAll<HTMLButtonElement>("button")) {
+      button.classList.toggle("active", Number(button.dataset.level) === nsfwValue);
+    }
   }
 
-  if (history.length === 0) {
-    const li = document.createElement("li");
-    li.className = "muted tiny";
-    li.textContent = "还没有提交记录。";
-    historyList.append(li);
+  for (const name of selectedTagValues) {
+    const chip = document.createElement("span");
+    chip.className = "tag-chip";
+    chip.append(`#${name}`);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.addEventListener("click", () => toggleTag(name));
+    chip.append(remove);
+    selectedTags.append(chip);
+  }
+
+  const query = tagFilter.value.trim().toLowerCase();
+  const names = [...new Set([...availableTags, ...selectedTagValues])]
+    .filter((name) => !query || name.toLowerCase().includes(query))
+    .sort((a, b) => a.localeCompare(b, "zh-CN"));
+  tagOptions.innerHTML = "";
+  if (names.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "muted tiny";
+    empty.textContent = "没有匹配标签";
+    tagOptions.append(empty);
+    return;
+  }
+  for (const name of names) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `tag-option${selectedTagValues.includes(name) ? " active" : ""}`;
+    button.textContent = `#${name}`;
+    button.addEventListener("click", () => toggleTag(name));
+    tagOptions.append(button);
   }
 }
+
+function toggleTag(name: string): void {
+  selectedTagValues = selectedTagValues.includes(name)
+    ? selectedTagValues.filter((item) => item !== name)
+    : selectedTagValues.length >= MAX_TAGS
+      ? selectedTagValues
+      : [...selectedTagValues, name];
+  renderTags();
+  scheduleDraft();
+}
+
+function addTag(): void {
+  const name = tagDraft.value.trim().replace(/^#/, "");
+  if (!name) return;
+  if (!selectedTagValues.includes(name) && selectedTagValues.length < MAX_TAGS) {
+    selectedTagValues = [...selectedTagValues, name];
+  }
+  tagDraft.value = "";
+  renderTags();
+  scheduleDraft();
+}
+
+async function loadTags(): Promise<void> {
+  const response = await sendMessage<{ ok: boolean; tags?: string[] }>({
+    type: "GET_TAGS",
+  });
+  availableTags = response.ok ? (response.tags ?? []) : [];
+  renderTags();
+}
+
 
 function renderContext(): void {
   if (!context) {
@@ -136,8 +179,6 @@ function renderContext(): void {
 
 function fillSettings(): void {
   if (!settings) return;
-  apiBase.value = settings.apiBase;
-  webBase.value = settings.webBase;
   apiKey.value = "";
   apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
   updateAuth();
@@ -149,12 +190,10 @@ function readForm(): Draft {
     promptZh: promptZh.value.trim(),
     promptEn: promptEn.value.trim(),
     negativePrompt: negativePrompt.value.trim(),
-    tags: tagsInput.value.trim(),
-    nsfwLevel: Number(nsfwLevel.value),
+    tags: selectedTagValues,
+    nsfwLevel: nsfwValue,
     sourceUrl: sourceUrl.value.trim(),
-    sourceSite: sourceSite.value.trim(),
     imageDataUrl,
-    publish: publishInput.checked,
     savedAt: Date.now(),
   };
 }
@@ -164,11 +203,18 @@ function applyForm(draft: Partial<Draft>): void {
   promptZh.value = draft.promptZh ?? "";
   promptEn.value = draft.promptEn ?? "";
   negativePrompt.value = draft.negativePrompt ?? "";
-  tagsInput.value = draft.tags ?? "";
-  nsfwLevel.value = String(draft.nsfwLevel ?? 0);
+  const legacyTags = (draft as unknown as { tags?: unknown }).tags;
+  selectedTagValues = Array.isArray(legacyTags)
+    ? legacyTags.map((value) => String(value))
+    : typeof legacyTags === "string"
+      ? legacyTags
+          .split(/[,，]/)
+          .map((value: string) => value.trim())
+          .filter(Boolean)
+      : [];
+  nsfwValue = Number(draft.nsfwLevel ?? 0);
   sourceUrl.value = draft.sourceUrl ?? "";
-  sourceSite.value = draft.sourceSite ?? "";
-  publishInput.checked = Boolean(draft.publish);
+  renderTags();
   if (draft.imageDataUrl) setImage(draft.imageDataUrl);
 }
 
@@ -202,11 +248,9 @@ function clearForm(): void {
     promptZh: "",
     promptEn: "",
     negativePrompt: "",
-    tags: "",
+    tags: [],
     nsfwLevel: 0,
     sourceUrl: "",
-    sourceSite: "",
-    publish: false,
     imageDataUrl: "",
   });
   clearImage();
@@ -294,13 +338,6 @@ async function readTab(): Promise<void> {
 
     if (response.pageUrl && !sourceUrl.value)
       sourceUrl.value = response.pageUrl;
-    if (response.pageUrl && !sourceSite.value) {
-      try {
-        sourceSite.value = new URL(response.pageUrl).hostname;
-      } catch {
-        // ignore invalid URL
-      }
-    }
     if (response.selectionText && !promptZh.value)
       promptZh.value = response.selectionText;
     if (response.imageUrl) await fetchImage(response.imageUrl);
@@ -328,8 +365,6 @@ async function verifyKey(): Promise<void> {
   }>({
     type: "VERIFY_KEY",
     ...(key ? { apiKey: key } : {}),
-    apiBase: apiBase.value,
-    webBase: webBase.value,
   });
 
   if (!response.ok) {
@@ -339,6 +374,7 @@ async function verifyKey(): Promise<void> {
 
   settings = response.settings ?? settings;
   fillSettings();
+  await loadTags();
   showToast(settings?.user ? "API Key 已验证" : "设置已保存（匿名模式）");
 }
 
@@ -349,6 +385,7 @@ async function clearKey(): Promise<void> {
   });
   if (response.settings) settings = response.settings;
   fillSettings();
+  await loadTags();
   showToast("已解除绑定，可匿名提交");
 }
 
@@ -370,23 +407,17 @@ async function submit(): Promise<void> {
     promptZh: promptZh.value.trim(),
     promptEn: promptEn.value.trim(),
     negativePrompt: negativePrompt.value.trim(),
-    tags: tagsInput.value
-      .split(/[,，]/)
-      .map((value) => value.trim())
-      .filter(Boolean),
-    nsfwLevel: Number(nsfwLevel.value),
+    tags: selectedTagValues,
+    nsfwLevel: nsfwValue,
     imageDataUrl,
     sourceUrl: sourceUrl.value.trim(),
-    sourceSite:
-      sourceSite.value.trim() ||
-      (() => {
-        try {
-          return sourceUrl.value ? new URL(sourceUrl.value).hostname : "";
-        } catch {
-          return "";
-        }
-      })(),
-    publish: publishInput.checked,
+    sourceSite: (() => {
+      try {
+        return sourceUrl.value ? new URL(sourceUrl.value).hostname : "";
+      } catch {
+        return "";
+      }
+    })(),
   };
 
   const response = await sendMessage<{
@@ -424,18 +455,15 @@ async function refreshState(): Promise<void> {
     ok: boolean;
     settings?: Settings;
     queue?: QueueItem[];
-    history?: HistoryItem[];
     context?: PendingContext | null;
   }>({ type: "GET_STATE" });
 
   if (!response.ok) return;
   settings = response.settings ?? settings;
   queue = response.queue ?? [];
-  history = response.history ?? [];
   context = response.context ?? null;
   fillSettings();
   updateBadge();
-  renderHistory();
   renderContext();
 }
 
@@ -450,20 +478,32 @@ async function init(): Promise<void> {
     promptZh.value = context.selectionText;
 
   loading = false;
+  await loadTags();
 
   for (const element of [
     titleInput,
     promptZh,
     promptEn,
     negativePrompt,
-    tagsInput,
-    nsfwLevel,
     sourceUrl,
-    sourceSite,
   ]) {
     element.addEventListener("input", scheduleDraft);
   }
-  publishInput.addEventListener("change", scheduleDraft);
+  tagFilter.addEventListener("input", renderTags);
+  tagDraft.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addTag();
+    }
+  });
+  nsfwPicker.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    const button = target.closest<HTMLButtonElement>("button[data-level]");
+    if (!button) return;
+    nsfwValue = Number(button.dataset.level);
+    renderTags();
+    scheduleDraft();
+  });
 }
 
 $("toggleSettings").addEventListener("click", () =>
@@ -471,6 +511,33 @@ $("toggleSettings").addEventListener("click", () =>
 );
 $("verifyKey").addEventListener("click", () => void verifyKey());
 $("clearKey").addEventListener("click", () => void clearKey());
+getApiKey.addEventListener("click", () => {
+  void sendMessage({ type: "OPEN_API_KEY_PAGE" });
+});
+$("selectAllTags").addEventListener("click", () => {
+  selectedTagValues = [...new Set([...selectedTagValues, ...availableTags])].slice(0, MAX_TAGS);
+  renderTags();
+  scheduleDraft();
+});
+$("invertTags").addEventListener("click", () => {
+  const query = tagFilter.value.trim().toLowerCase();
+  const names = [...new Set([...availableTags, ...selectedTagValues])].filter(
+    (name) => !query || name.toLowerCase().includes(query),
+  );
+  const next = new Set(selectedTagValues);
+  for (const name of names) {
+    if (next.has(name)) next.delete(name);
+    else next.add(name);
+  }
+  selectedTagValues = [...next].slice(0, MAX_TAGS);
+  renderTags();
+  scheduleDraft();
+});
+$("clearTags").addEventListener("click", () => {
+  selectedTagValues = [];
+  renderTags();
+  scheduleDraft();
+});
 $("pickFile").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
@@ -488,10 +555,6 @@ $("retryQueue").addEventListener("click", async () => {
   await refreshState();
   showToast("离线队列已重试");
 });
-$("manage").addEventListener(
-  "click",
-  () => void sendMessage({ type: "OPEN_MANAGE" }),
-);
 $("useContext").addEventListener("click", async () => {
   if (context?.imageUrl) await fetchImage(context.imageUrl);
   if (context?.pageUrl && !sourceUrl.value) sourceUrl.value = context.pageUrl;

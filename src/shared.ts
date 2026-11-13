@@ -18,12 +18,10 @@ export interface Draft {
   promptZh: string;
   promptEn: string;
   negativePrompt: string;
-  tags: string;
+  tags: string[];
   nsfwLevel: number;
   sourceUrl: string;
-  sourceSite: string;
   imageDataUrl: string;
-  publish: boolean;
   savedAt: number;
 }
 
@@ -38,7 +36,6 @@ export interface SubmitPayload {
   imageDataUrl: string;
   sourceUrl: string;
   sourceSite: string;
-  publish: boolean;
 }
 
 export interface QueueItem extends SubmitPayload {
@@ -48,14 +45,6 @@ export interface QueueItem extends SubmitPayload {
   lastError?: string;
 }
 
-export interface HistoryItem {
-  clientRef: string;
-  title: string;
-  status: "queued" | "submitted" | "failed";
-  promptId?: string;
-  error?: string;
-  createdAt: number;
-}
 
 export interface PendingContext {
   imageUrl?: string;
@@ -68,12 +57,12 @@ export interface PendingContext {
 const SETTINGS_KEY = "settings";
 const DRAFT_KEY = "draft";
 const QUEUE_KEY = "queue";
-const HISTORY_KEY = "history";
 const CONTEXT_KEY = "pendingContext";
 
 export const DEFAULT_SETTINGS: Settings = {
-  apiBase: "http://localhost:3000",
-  webBase: "http://localhost:5173",
+  // Local test defaults. Change both to the production domain before packaging.
+  apiBase: "http://localhost:3100",
+  webBase: "http://localhost:5174",
   apiKey: "",
   user: null,
 };
@@ -88,8 +77,9 @@ export async function loadSettings(): Promise<Settings> {
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
-    apiBase: normalizeBase(stored.apiBase ?? DEFAULT_SETTINGS.apiBase),
-    webBase: normalizeBase(stored.webBase ?? DEFAULT_SETTINGS.webBase),
+    // Endpoint configuration is now build-time only; ignored old stored values.
+    apiBase: DEFAULT_SETTINGS.apiBase,
+    webBase: DEFAULT_SETTINGS.webBase,
   };
 }
 
@@ -119,24 +109,6 @@ export async function loadQueue(): Promise<QueueItem[]> {
 
 export async function saveQueue(queue: QueueItem[]): Promise<void> {
   await chrome.storage.local.set({ [QUEUE_KEY]: queue });
-}
-
-export async function loadHistory(): Promise<HistoryItem[]> {
-  const result = await chrome.storage.local.get(HISTORY_KEY);
-  return (result?.[HISTORY_KEY] as HistoryItem[] | undefined) ?? [];
-}
-
-export async function saveHistory(history: HistoryItem[]): Promise<void> {
-  await chrome.storage.local.set({ [HISTORY_KEY]: history.slice(0, 50) });
-}
-
-export async function upsertHistory(item: HistoryItem): Promise<void> {
-  const history = await loadHistory();
-  const next = [
-    item,
-    ...history.filter((entry) => entry.clientRef !== item.clientRef),
-  ];
-  await saveHistory(next);
 }
 
 export async function loadContext(): Promise<PendingContext | null> {
