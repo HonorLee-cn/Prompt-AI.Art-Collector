@@ -29,7 +29,7 @@
         </p>
 
         <div id="settingsPanel" class="settings hidden">
-          <label
+          <label id="keyField"
             >API Key<input
               id="apiKey"
               type="password"
@@ -39,7 +39,9 @@
             <button id="verifyKey" class="primary" type="button">
               保存并验证
             </button>
-            <button id="clearKey" class="ghost" type="button">解除绑定</button>
+            <button id="clearKey" class="ghost hidden" type="button">
+              解除绑定
+            </button>
           </div>
           <button id="getApiKey" class="ghost full" type="button">
             获取 API KEY

@@ -23,6 +23,9 @@ let loading = true;
 let draftTimer: number | undefined;
 
 const apiKey = $<HTMLInputElement>("apiKey");
+const keyField = $<HTMLElement>("keyField");
+const verifyKeyButton = $<HTMLButtonElement>("verifyKey");
+const clearKeyButton = $<HTMLButtonElement>("clearKey");
 const settingsPanel = $<HTMLElement>("settingsPanel");
 const authState = $<HTMLElement>("authState");
 const authText = $<HTMLElement>("authText");
@@ -70,13 +73,17 @@ function showError(element: HTMLElement, message: string): void {
 
 function updateAuth(): void {
   if (!settings) return;
-  if (settings.user) {
+  const bound = Boolean(settings.user);
+  if (bound) {
     authState.textContent = "已绑定";
-    authText.textContent = `已绑定 @${settings.user.username}，收录归属本人。`;
+    authText.textContent = `已绑定 @${settings.user?.username}，收录归属本人。`;
   } else {
     authState.textContent = "未绑定";
     authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
   }
+  keyField.classList.toggle("hidden", bound);
+  verifyKeyButton.classList.toggle("hidden", bound);
+  clearKeyButton.classList.toggle("hidden", !bound);
 }
 
 function updateBadge(): void {
@@ -509,8 +516,8 @@ async function init(): Promise<void> {
 $("toggleSettings").addEventListener("click", () =>
   settingsPanel.classList.toggle("hidden"),
 );
-$("verifyKey").addEventListener("click", () => void verifyKey());
-$("clearKey").addEventListener("click", () => void clearKey());
+verifyKeyButton.addEventListener("click", () => void verifyKey());
+clearKeyButton.addEventListener("click", () => void clearKey());
 getApiKey.addEventListener("click", () => {
   void sendMessage({ type: "OPEN_API_KEY_PAGE" });
 });

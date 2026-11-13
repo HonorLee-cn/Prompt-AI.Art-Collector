@@ -48,7 +48,7 @@
 
     <section class="card">
       <h2>连接设置</h2>
-      <label
+      <label id="keyField"
         >API Key<input
           id="apiKey"
           type="password"
@@ -57,6 +57,9 @@
       <div class="row gap" style="margin-top: 10px">
         <button id="save" class="primary" type="button">保存</button>
         <button id="verify" class="ghost" type="button">保存并验证</button>
+        <button id="clearKey" class="ghost hidden" type="button">
+          解除绑定
+        </button>
         <button id="getApiKey" class="ghost" type="button">获取 API KEY</button>
       </div>
       <p id="status" class="muted small"></p>

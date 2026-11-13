@@ -3,6 +3,10 @@ import { sendMessage, type Settings } from "./shared";
 const $ = <T extends HTMLElement>(id: string): T =>
   document.getElementById(id) as T;
 const apiKey = $<HTMLInputElement>("apiKey");
+const keyField = $<HTMLElement>("keyField");
+const saveButton = $<HTMLButtonElement>("save");
+const verifyButton = $<HTMLButtonElement>("verify");
+const clearKeyButton = $<HTMLButtonElement>("clearKey");
 const status = $<HTMLElement>("status");
 let settings: Settings | null = null;
 
@@ -12,6 +16,11 @@ async function load(): Promise<void> {
   });
   settings = response.settings ?? null;
   if (!settings) return;
+  const bound = Boolean(settings.user);
+  keyField.classList.toggle("hidden", bound);
+  saveButton.classList.toggle("hidden", bound);
+  verifyButton.classList.toggle("hidden", bound);
+  clearKeyButton.classList.toggle("hidden", !bound);
   apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
   status.textContent = settings.user
     ? `已绑定 @${settings.user.username}`
@@ -44,6 +53,15 @@ async function save(verify: boolean): Promise<void> {
 
 $("save").addEventListener("click", () => void save(false));
 $("verify").addEventListener("click", () => void save(true));
+clearKeyButton.addEventListener("click", async () => {
+  const response = await sendMessage<{ ok: boolean; settings?: Settings }>({
+    type: "SAVE_SETTINGS",
+    settings: { apiKey: "", user: null },
+  });
+  settings = response.settings ?? settings;
+  apiKey.value = "";
+  await load();
+});
 $("getApiKey").addEventListener("click", () => {
   void sendMessage({ type: "OPEN_API_KEY_PAGE" });
 });
