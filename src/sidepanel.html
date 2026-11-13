@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prompt-AI.ART 收录</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span>PROMPT-AI.ART</span>
+      </div>
+      <div class="top-right">
+        <span id="queueBadge" class="badge hidden">0</span>
+        <span id="authState" class="muted">检查绑定…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="card auth-card">
+        <div class="row-between">
+          <h2>账号</h2>
+          <button id="toggleSettings" class="link" type="button">设置</button>
+        </div>
+        <p id="authText" class="muted small">
+          绑定 API Key 后收录归属本人；不绑定则匿名提交到待审核。
+        </p>
+
+        <div id="settingsPanel" class="settings hidden">
+          <label
+            >API 地址<input
+              id="apiBase"
+              type="url"
+              placeholder="http://localhost:3000"
+          /></label>
+          <label
+            >站点地址<input
+              id="webBase"
+              type="url"
+              placeholder="http://localhost:5173"
+          /></label>
+          <label
+            >API Key<input
+              id="apiKey"
+              type="password"
+              placeholder="pa_…（留空保留已保存的 Key）"
+          /></label>
+          <div class="row gap">
+            <button id="verifyKey" class="primary" type="button">
+              保存并验证
+            </button>
+            <button id="clearKey" class="ghost" type="button">解除绑定</button>
+          </div>
+          <p class="muted tiny">
+            Key 只保存在本机 chrome.storage.local，不会发送到其他服务。
+          </p>
+        </div>
+      </section>
+
+      <section id="contextBanner" class="card context-card hidden">
+        <p id="contextText" class="small"></p>
+        <div class="row gap">
+          <button id="useContext" class="primary small-btn" type="button">
+            使用右键内容
+          </button>
+          <button id="dismissContext" class="ghost small-btn" type="button">
+            忽略
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row-between">
+          <h2>图片</h2>
+          <button id="readTab" class="link" type="button">从当前页读取</button>
+        </div>
+        <div id="imageDrop" class="dropzone">
+          <img id="imagePreview" class="preview hidden" alt="预览" />
+          <div id="dropHint" class="muted small">
+            拖入图片、粘贴截图，或从右键菜单选“收录这张图片”
+          </div>
+        </div>
+        <div class="row gap wrap">
+          <button id="pickFile" class="ghost small-btn" type="button">
+            选择文件
+          </button>
+          <input
+            id="fileInput"
+            class="hidden"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+          />
+          <input
+            id="imageUrl"
+            class="url-input"
+            type="url"
+            placeholder="或粘贴图片链接"
+          />
+          <button id="fetchUrl" class="ghost small-btn" type="button">
+            读取
+          </button>
+        </div>
+        <p id="imageError" class="error small hidden"></p>
+      </section>
+
+      <section class="card">
+        <h2>收录信息</h2>
+        <label>标题<input id="title" type="text" maxlength="200" /></label>
+        <label>中文提示词<textarea id="promptZh" rows="3"></textarea></label>
+        <label
+          >English prompt<textarea id="promptEn" rows="3"></textarea>
+        </label>
+        <label>反向提示词<input id="negativePrompt" type="text" /></label>
+        <label
+          >标签（逗号分隔）<input
+            id="tags"
+            type="text"
+            placeholder="霓虹, cinematic"
+        /></label>
+        <div class="grid-2">
+          <label
+            >NSFW
+            <select id="nsfwLevel">
+              <option value="0">0 · SFW</option>
+              <option value="1">1 · Suggestive</option>
+              <option value="2">2 · NSFW</option>
+            </select>
+          </label>
+          <label class="check-label"
+            ><input id="publish" type="checkbox" /> 提交后申请公开</label
+          >
+        </div>
+        <div class="grid-2">
+          <label>来源页面<input id="sourceUrl" type="url" /></label>
+          <label>来源站点<input id="sourceSite" type="text" /></label>
+        </div>
+        <p id="formError" class="error small hidden"></p>
+        <button id="submit" class="primary full" type="button">提交收录</button>
+        <p class="muted tiny">草稿自动保存在本机；关闭侧边栏不会丢失。</p>
+      </section>
+
+      <section class="card">
+        <div class="row-between">
+          <h2>提交记录</h2>
+          <div class="row gap">
+            <button id="retryQueue" class="link hidden" type="button">
+              重试队列
+            </button>
+            <button id="manage" class="link" type="button">去管理</button>
+          </div>
+        </div>
+        <p id="queueText" class="muted tiny"></p>
+        <ul id="historyList" class="history"></ul>
+      </section>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+    <script type="module" src="sidepanel.ts"></script>
+  </body>
+</html>

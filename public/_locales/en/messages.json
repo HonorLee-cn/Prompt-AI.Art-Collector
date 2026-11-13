@@ -1,0 +1,8 @@
+{
+  "extName": { "message": "Prompt-AI.ART Collector" },
+  "extDesc": {
+    "message": "Collect web images into Prompt-AI.ART with offline retry and API key binding."
+  },
+  "actionTitle": { "message": "Open Prompt-AI.ART collector" },
+  "commandOpen": { "message": "Open the Prompt-AI.ART collector" }
+}

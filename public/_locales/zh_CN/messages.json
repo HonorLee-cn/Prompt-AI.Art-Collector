@@ -1,0 +1,8 @@
+{
+  "extName": { "message": "Prompt-AI.ART 收录助手" },
+  "extDesc": {
+    "message": "从网页图片一键收录到 Prompt-AI.ART，支持离线重试与 API Key 绑定。"
+  },
+  "actionTitle": { "message": "打开 Prompt-AI.ART 收录面板" },
+  "commandOpen": { "message": "打开 Prompt-AI.ART 收录面板" }
+}
