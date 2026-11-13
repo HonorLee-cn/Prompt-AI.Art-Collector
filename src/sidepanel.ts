@@ -30,6 +30,7 @@ const settingsPanel = $<HTMLElement>("settingsPanel");
 const authState = $<HTMLElement>("authState");
 const authText = $<HTMLElement>("authText");
 const boundBadge = $<HTMLElement>("boundBadge");
+const boundNote = $<HTMLElement>("boundNote");
 const contextBanner = $<HTMLElement>("contextBanner");
 const contextText = $<HTMLElement>("contextText");
 const imagePreview = $<HTMLImageElement>("imagePreview");
@@ -85,10 +86,13 @@ function updateAuth(): void {
     username.textContent = `@${settings.user?.username}`;
     boundBadge.replaceChildren(label, username);
     boundBadge.classList.remove("hidden");
-    authText.textContent = "收录归属本人。";
+    boundNote.classList.remove("hidden");
+    authText.classList.add("hidden");
   } else {
     authState.textContent = "未绑定";
     boundBadge.classList.add("hidden");
+    boundNote.classList.add("hidden");
+    authText.classList.remove("hidden");
     authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
   }
   keyField.classList.toggle("hidden", bound);
