@@ -20,9 +20,14 @@ async function load(): Promise<void> {
   keyActions.classList.toggle("hidden", bound);
   clearKeyButton.classList.toggle("hidden", !bound);
   apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
-  status.textContent = settings.user
-    ? `已绑定 @${settings.user.username}`
-    : "未绑定：将匿名提交到待审核区";
+  if (settings.user) {
+    const username = document.createElement("span");
+    username.className = "bound-user";
+    username.textContent = `@${settings.user.username}`;
+    status.replaceChildren("已绑定 ", username);
+  } else {
+    status.textContent = "未绑定：将匿名提交到待审核区";
+  }
 }
 
 async function save(verify: boolean): Promise<void> {

@@ -76,7 +76,10 @@ function updateAuth(): void {
   const bound = Boolean(settings.user);
   if (bound) {
     authState.textContent = "已绑定";
-    authText.textContent = `已绑定 @${settings.user?.username}，收录归属本人。`;
+    const username = document.createElement("span");
+    username.className = "bound-user";
+    username.textContent = `@${settings.user?.username}`;
+    authText.replaceChildren("已绑定 ", username, "，收录归属本人。");
   } else {
     authState.textContent = "未绑定";
     authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
