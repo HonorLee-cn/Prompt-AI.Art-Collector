@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prompt-AI.ART 扩展设置</title>
+    <title data-i18n="options.title">Prompt-AI.ART 扩展设置</title>
     <link rel="stylesheet" href="sidepanel.css" />
     <style>
       body {
@@ -31,51 +31,91 @@
     >
       <div class="brand">
         <span class="dot"></span><span>PROMPT-AI.ART COLLECTOR</span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="zh" class="active" aria-pressed="true">中</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
       </div>
     </header>
 
     <section class="card">
-      <h2>使用方式</h2>
-      <p class="muted small">
+      <h2 data-i18n="options.usageTitle">使用方式</h2>
+      <p class="muted small" data-i18n="options.usageLine1">
         点击工具栏图标打开 Side Panel；在任意图片上右键选择“收录这张图片到
         Prompt-AI.ART”， 或按 <code>Ctrl+Shift+Y</code> /
         <code>Command+Shift+Y</code> 打开。
       </p>
-      <p class="muted small">
+      <p class="muted small" data-i18n="options.usageLine2">
         扩展只处理当前页/右键/粘贴/拖入的图片，不读取浏览历史。
       </p>
     </section>
 
     <section class="card">
-      <h2>连接设置</h2>
+      <h2 data-i18n="options.connectionTitle">连接设置</h2>
       <label id="keyField"
-        >API Key<input
+        ><span data-i18n="options.apiKeyLabel">API Key</span
+        ><input
           id="apiKey"
           type="password"
           placeholder="留空保留已保存的 Key"
+          data-i18n-placeholder="options.keyPlaceholder"
       /></label>
       <div id="keyActions" class="row gap" style="margin-top: 10px">
-        <button id="save" class="primary" type="button">保存</button>
-        <button id="verify" class="ghost" type="button">保存并验证</button>
-        <button id="getApiKey" class="ghost" type="button">获取 API KEY</button>
+        <button
+          id="save"
+          class="primary"
+          type="button"
+          data-i18n="options.save"
+        >
+          保存
+        </button>
+        <button
+          id="verify"
+          class="ghost"
+          type="button"
+          data-i18n="options.saveVerify"
+        >
+          保存并验证
+        </button>
+        <button
+          id="getApiKey"
+          class="ghost"
+          type="button"
+          data-i18n="options.getKey"
+        >
+          获取 API KEY
+        </button>
       </div>
-      <button id="clearKey" class="ghost full unbind hidden" type="button">
+      <button
+        id="clearKey"
+        class="ghost full unbind hidden"
+        type="button"
+        data-i18n="options.unbind"
+      >
         解除绑定
       </button>
       <p id="status" class="muted small"></p>
     </section>
 
     <section class="card">
-      <h2>权限与隐私</h2>
+      <h2 data-i18n="options.privacyTitle">权限与隐私</h2>
       <ul class="muted small">
-        <li>API Key 只保存在本机 <code>chrome.storage.local</code>。</li>
-        <li>为读取图片，扩展需要访问图片所在站点的权限；不会上传浏览历史。</li>
-        <li>不申请通知权限；角标只表示“待重试的离线队列”。</li>
-        <li>未绑定 Key 时匿名提交，内容进入待审核区。</li>
+        <li data-i18n="options.privacyKey">
+          API Key 只保存在本机 <code>chrome.storage.local</code>。
+        </li>
+        <li data-i18n="options.privacyHost">
+          为读取图片，扩展需要访问图片所在站点的权限；不会上传浏览历史。
+        </li>
+        <li data-i18n="options.privacyNotifications">
+          不申请通知权限；角标只表示“待重试的离线队列”。
+        </li>
+        <li data-i18n="options.privacyAnonymous">
+          未绑定 Key 时匿名提交，内容进入待审核区。
+        </li>
       </ul>
     </section>
 
-    <p class="muted tiny">
+    <p class="muted tiny" data-i18n="options.install">
       安装：chrome://extensions → 开发者模式 → 加载已解压的扩展程序 → 选择 dist
       目录。
     </p>

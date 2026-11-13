@@ -1,13 +1,16 @@
 import {
   clearDraft,
   loadDraft,
+  loadLang,
   saveDraft,
   sendMessage,
   type Draft,
+  type Lang,
   type PendingContext,
   type QueueItem,
   type Settings,
 } from "./shared";
+import { applyI18n, bindLangSwitch, markLangSwitch, t } from "./i18n";
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -21,6 +24,7 @@ let context: PendingContext | null = null;
 let imageDataUrl = "";
 let loading = true;
 let draftTimer: number | undefined;
+let lang: Lang = "zh";
 
 const apiKey = $<HTMLInputElement>("apiKey");
 const keyField = $<HTMLElement>("keyField");
@@ -73,14 +77,25 @@ function showError(element: HTMLElement, message: string): void {
   element.classList.toggle("hidden", !message);
 }
 
+function applyLanguage(next: Lang): void {
+  lang = next;
+  document.documentElement.lang = next === "en" ? "en" : "zh-CN";
+  applyI18n(lang);
+  markLangSwitch(lang);
+  updateAuth();
+  updateBadge();
+  renderTags();
+  renderContext();
+}
+
 function updateAuth(): void {
   if (!settings) return;
   const bound = Boolean(settings.user);
   if (bound) {
-    authState.textContent = "已绑定";
+    authState.textContent = t(lang, "side.auth.bound");
     const label = document.createElement("span");
     label.className = "muted";
-    label.textContent = "已绑定 ";
+    label.textContent = t(lang, "side.auth.boundLabel");
     const username = document.createElement("span");
     username.className = "bound-user";
     username.textContent = `@${settings.user?.username}`;
@@ -89,11 +104,11 @@ function updateAuth(): void {
     boundNote.classList.remove("hidden");
     authText.classList.add("hidden");
   } else {
-    authState.textContent = "未绑定";
+    authState.textContent = t(lang, "side.auth.unbound");
     boundBadge.classList.add("hidden");
     boundNote.classList.add("hidden");
     authText.classList.remove("hidden");
-    authText.textContent = "未绑定 API Key：收录会匿名提交到待审核区。";
+    authText.textContent = t(lang, "side.auth.unboundText");
   }
   keyField.classList.toggle("hidden", bound);
   verifyKeyButton.classList.toggle("hidden", bound);
@@ -106,8 +121,8 @@ function updateBadge(): void {
   queueBadge.classList.toggle("hidden", queue.length === 0);
   queueText.textContent =
     queue.length > 0
-      ? `离线队列 ${queue.length} 条，联网后自动重试（角标只表示待重试）。`
-      : "没有待重试的提交。";
+      ? t(lang, "side.queue.count", { count: queue.length })
+      : t(lang, "side.queue.empty");
   queueRow.classList.toggle("hidden", queue.length === 0);
   retryQueue.classList.toggle("hidden", queue.length === 0);
 }
@@ -140,7 +155,7 @@ function renderTags(): void {
   if (names.length === 0) {
     const empty = document.createElement("span");
     empty.className = "muted tiny";
-    empty.textContent = "没有匹配标签";
+    empty.textContent = t(lang, "side.tags.empty");
     tagOptions.append(empty);
     return;
   }
@@ -192,17 +207,23 @@ function renderContext(): void {
 
   contextBanner.classList.remove("hidden");
   const parts = [];
-  if (context.imageUrl) parts.push("右键图片");
+  if (context.imageUrl) parts.push(t(lang, "side.context.image"));
   if (context.selectionText)
-    parts.push(`选中文字：${context.selectionText.slice(0, 50)}`);
+    parts.push(
+      t(lang, "side.context.selection", {
+        text: context.selectionText.slice(0, 50),
+      }),
+    );
   if (context.pageTitle) parts.push(context.pageTitle);
-  contextText.textContent = parts.join(" · ") || "来自当前页面";
+  contextText.textContent = parts.join(" · ") || t(lang, "side.context.page");
 }
 
 function fillSettings(): void {
   if (!settings) return;
   apiKey.value = "";
-  apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
+  apiKey.placeholder = settings.apiKey
+    ? t(lang, "side.auth.savedKey")
+    : t(lang, "side.auth.keyPlaceholder");
   updateAuth();
 }
 
@@ -305,7 +326,7 @@ async function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("读取图片失败"));
+    reader.onerror = () => reject(new Error(t(lang, "side.error.readImage")));
     reader.readAsDataURL(file);
   });
 }
@@ -316,14 +337,14 @@ async function onFile(file: File): Promise<void> {
   } catch (error) {
     showError(
       imageError,
-      error instanceof Error ? error.message : "读取图片失败",
+      error instanceof Error ? error.message : t(lang, "side.error.readImage"),
     );
   }
 }
 
 async function fetchImage(url: string): Promise<void> {
   if (!url) return;
-  showError(imageError, "正在读取图片…");
+  showError(imageError, t(lang, "side.error.readingImage"));
 
   try {
     const response = await sendMessage<{
@@ -335,12 +356,12 @@ async function fetchImage(url: string): Promise<void> {
       url,
     });
     if (!response.ok || !response.dataUrl)
-      throw new Error(response.error ?? "读取失败");
+      throw new Error(response.error ?? t(lang, "side.error.loadFailed"));
     setImage(await compressDataUrl(response.dataUrl));
   } catch (error) {
     showError(
       imageError,
-      error instanceof Error ? error.message : "读取图片失败",
+      error instanceof Error ? error.message : t(lang, "side.error.readImage"),
     );
   }
 }
@@ -356,7 +377,8 @@ async function readTab(): Promise<void> {
       error?: string;
     }>({ type: "READ_TAB" });
 
-    if (!response.ok) throw new Error(response.error ?? "读取页面失败");
+    if (!response.ok)
+      throw new Error(response.error ?? t(lang, "side.error.readPage"));
 
     if (response.pageUrl && !sourceUrl.value)
       sourceUrl.value = response.pageUrl;
@@ -366,13 +388,13 @@ async function readTab(): Promise<void> {
     else
       showError(
         imageError,
-        "当前页面没有找到可用图片，可右键图片或手动粘贴链接。",
+        t(lang, "side.error.noImage"),
       );
     scheduleDraft();
   } catch (error) {
     showError(
       imageError,
-      error instanceof Error ? error.message : "读取页面失败",
+      error instanceof Error ? error.message : t(lang, "side.error.readPage"),
     );
   }
 }
@@ -390,14 +412,18 @@ async function verifyKey(): Promise<void> {
   });
 
   if (!response.ok) {
-    showToast(response.error ?? "验证失败", "error");
+    showToast(response.error ?? t(lang, "side.toast.verifyFailed"), "error");
     return;
   }
 
   settings = response.settings ?? settings;
   fillSettings();
   await loadTags();
-  showToast(settings?.user ? "API Key 已验证" : "设置已保存（匿名模式）");
+  showToast(
+    settings?.user
+      ? t(lang, "side.toast.verified")
+      : t(lang, "side.toast.savedAnon"),
+  );
 }
 
 async function clearKey(): Promise<void> {
@@ -408,18 +434,18 @@ async function clearKey(): Promise<void> {
   if (response.settings) settings = response.settings;
   fillSettings();
   await loadTags();
-  showToast("已解除绑定，可匿名提交");
+  showToast(t(lang, "side.toast.unbound"));
 }
 
 async function submit(): Promise<void> {
   showError(formError, "");
 
   if (!promptZh.value.trim() && !promptEn.value.trim()) {
-    showError(formError, "至少填写中文或英文提示词。");
+    showError(formError, t(lang, "side.error.promptRequired"));
     return;
   }
   if (!imageDataUrl) {
-    showError(formError, "请先添加图片（扩展只支持图片）。");
+    showError(formError, t(lang, "side.error.imageRequired"));
     return;
   }
 
@@ -451,14 +477,14 @@ async function submit(): Promise<void> {
   }>({ type: "SUBMIT", item });
 
   if (response.ok) {
-    showToast("收录成功");
+    showToast(t(lang, "side.toast.success"));
     clearForm();
     await refreshState();
     return;
   }
 
   if (response.queued) {
-    showToast("已加入离线队列，联网后自动重试");
+    showToast(t(lang, "side.toast.queued"));
     clearForm();
     await refreshState();
     return;
@@ -466,8 +492,8 @@ async function submit(): Promise<void> {
 
   const message =
     response.code === "API_KEY_INVALID" || response.code === "AUTH_REQUIRED"
-      ? "API Key 失效或未绑定，请在“设置”中重新绑定；草稿已保留。"
-      : (response.error ?? "提交失败");
+      ? t(lang, "side.error.apiKey")
+      : (response.error ?? t(lang, "side.error.submitFailed"));
   showToast(message, "error");
   showError(formError, message);
 }
@@ -490,6 +516,8 @@ async function refreshState(): Promise<void> {
 }
 
 async function init(): Promise<void> {
+  lang = await loadLang();
+  applyLanguage(lang);
   await refreshState();
 
   const draft = await loadDraft();
@@ -575,7 +603,7 @@ $("submit").addEventListener("click", () => void submit());
 $("retryQueue").addEventListener("click", async () => {
   await sendMessage({ type: "PROCESS_QUEUE", force: true });
   await refreshState();
-  showToast("离线队列已重试");
+  showToast(t(lang, "side.toast.queueRetried"));
 });
 $("useContext").addEventListener("click", async () => {
   if (context?.imageUrl) await fetchImage(context.imageUrl);
@@ -622,4 +650,5 @@ window.addEventListener("beforeunload", () => {
   if (!loading) void saveDraft(readForm());
 });
 
+bindLangSwitch((next) => applyLanguage(next));
 void init();

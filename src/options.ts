@@ -1,4 +1,5 @@
-import { sendMessage, type Settings } from "./shared";
+import { loadLang, sendMessage, type Lang, type Settings } from "./shared";
+import { applyI18n, bindLangSwitch, markLangSwitch, t } from "./i18n";
 
 const $ = <T extends HTMLElement>(id: string): T =>
   document.getElementById(id) as T;
@@ -8,6 +9,27 @@ const keyActions = $<HTMLElement>("keyActions");
 const clearKeyButton = $<HTMLButtonElement>("clearKey");
 const status = $<HTMLElement>("status");
 let settings: Settings | null = null;
+let lang: Lang = "zh";
+
+function renderStatus(): void {
+  if (!settings) return;
+  if (settings.user) {
+    const username = document.createElement("span");
+    username.className = "bound-user";
+    username.textContent = `@${settings.user.username}`;
+    status.replaceChildren(t(lang, "options.status.boundPrefix"), username);
+  } else {
+    status.textContent = t(lang, "options.status.unbound");
+  }
+}
+
+function applyLanguage(next: Lang): void {
+  lang = next;
+  document.documentElement.lang = next === "en" ? "en" : "zh-CN";
+  applyI18n(lang);
+  markLangSwitch(lang);
+  renderStatus();
+}
 
 async function load(): Promise<void> {
   const response = await sendMessage<{ ok: boolean; settings?: Settings }>({
@@ -19,15 +41,10 @@ async function load(): Promise<void> {
   keyField.classList.toggle("hidden", bound);
   keyActions.classList.toggle("hidden", bound);
   clearKeyButton.classList.toggle("hidden", !bound);
-  apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
-  if (settings.user) {
-    const username = document.createElement("span");
-    username.className = "bound-user";
-    username.textContent = `@${settings.user.username}`;
-    status.replaceChildren("已绑定 ", username);
-  } else {
-    status.textContent = "未绑定：将匿名提交到待审核区";
-  }
+  apiKey.placeholder = settings.apiKey
+    ? t(lang, "options.savedKey")
+    : t(lang, "options.keyPlaceholder");
+  renderStatus();
 }
 
 async function save(verify: boolean): Promise<void> {
@@ -38,8 +55,8 @@ async function save(verify: boolean): Promise<void> {
       ...(key ? { apiKey: key } : {}),
     });
     status.textContent = response.ok
-      ? "验证成功"
-      : (response.error ?? "验证失败");
+      ? t(lang, "options.status.verifySuccess")
+      : (response.error ?? t(lang, "options.status.verifyFailed"));
   } else {
     const response = await sendMessage<{ ok: boolean; settings?: Settings }>({
       type: "SAVE_SETTINGS",
@@ -48,7 +65,7 @@ async function save(verify: boolean): Promise<void> {
       },
     });
     settings = response.settings ?? settings;
-    status.textContent = "设置已保存";
+    status.textContent = t(lang, "options.status.saved");
   }
   apiKey.value = "";
   await load();
@@ -68,4 +85,9 @@ clearKeyButton.addEventListener("click", async () => {
 $("getApiKey").addEventListener("click", () => {
   void sendMessage({ type: "OPEN_API_KEY_PAGE" });
 });
-void load();
+bindLangSwitch((next) => applyLanguage(next));
+void (async () => {
+  lang = await loadLang();
+  applyLanguage(lang);
+  await load();
+})();

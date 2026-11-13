@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prompt-AI.ART 收录</title>
+    <title data-i18n="side.title">Prompt-AI.ART 收录</title>
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
@@ -11,10 +11,16 @@
       <div class="brand">
         <span class="dot"></span>
         <span>PROMPT-AI.ART</span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="zh" class="active" aria-pressed="true">中</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
       </div>
       <div class="top-right">
         <span id="queueBadge" class="badge hidden">0</span>
-        <span id="authState" class="muted">检查绑定…</span>
+        <span id="authState" class="muted" data-i18n="side.auth.checking"
+          >检查绑定…</span
+        >
       </div>
     </header>
 
@@ -22,52 +28,98 @@
       <section class="card auth-card">
         <div class="row-between">
           <div class="row gap account-title">
-            <h2>账号</h2>
+            <h2 data-i18n="side.account">账号</h2>
             <span id="boundBadge" class="bound-badge hidden"></span>
-            <span id="boundNote" class="bound-note hidden">· 收录归属本人。</span>
+            <span
+              id="boundNote"
+              class="bound-note hidden"
+              data-i18n="side.auth.boundNote"
+              >· 收录归属本人。</span
+            >
           </div>
-          <button id="toggleSettings" class="link" type="button">设置</button>
+          <button
+            id="toggleSettings"
+            class="link"
+            type="button"
+            data-i18n="common.settings"
+          >
+            设置
+          </button>
         </div>
-        <p id="authText" class="muted small">
+        <p id="authText" class="muted small" data-i18n="side.auth.initial">
           绑定 API Key 后收录归属本人；不绑定则匿名提交到待审核。
         </p>
 
         <div id="settingsPanel" class="settings hidden">
           <label id="keyField"
-            >API Key<input
+            ><span data-i18n="side.apiKeyLabel">API Key</span
+            ><input
               id="apiKey"
               type="password"
               placeholder="pa_…（留空保留已保存的 Key）"
+              data-i18n-placeholder="side.auth.keyPlaceholder"
           /></label>
           <div class="row gap">
-            <button id="verifyKey" class="primary" type="button">
+            <button
+              id="verifyKey"
+              class="primary"
+              type="button"
+              data-i18n="side.verify"
+            >
               保存并验证
             </button>
           </div>
-          <button id="clearKey" class="ghost full unbind hidden" type="button">
+          <button
+            id="clearKey"
+            class="ghost full unbind hidden"
+            type="button"
+            data-i18n="side.unbind"
+          >
             解除绑定
           </button>
-          <button id="getApiKey" class="ghost full" type="button">
+          <button
+            id="getApiKey"
+            class="ghost full"
+            type="button"
+            data-i18n="side.getKey"
+          >
             获取 API KEY
           </button>
-          <p class="muted tiny">
+          <p class="muted tiny" data-i18n="side.keyHint">
             Key 只保存在本机 chrome.storage.local，不会发送到其他服务。
           </p>
         </div>
 
         <div id="queueRow" class="row-between hidden">
           <span id="queueText" class="muted tiny"></span>
-          <button id="retryQueue" class="link" type="button">重试队列</button>
+          <button
+            id="retryQueue"
+            class="link"
+            type="button"
+            data-i18n="side.retryQueue"
+          >
+            重试队列
+          </button>
         </div>
       </section>
 
       <section id="contextBanner" class="card context-card hidden">
         <p id="contextText" class="small"></p>
         <div class="row gap">
-          <button id="useContext" class="primary small-btn" type="button">
+          <button
+            id="useContext"
+            class="primary small-btn"
+            type="button"
+            data-i18n="side.contextUse"
+          >
             使用右键内容
           </button>
-          <button id="dismissContext" class="ghost small-btn" type="button">
+          <button
+            id="dismissContext"
+            class="ghost small-btn"
+            type="button"
+            data-i18n="side.contextDismiss"
+          >
             忽略
           </button>
         </div>
@@ -75,17 +127,29 @@
 
       <section class="card">
         <div class="row-between">
-          <h2>图片</h2>
-          <button id="readTab" class="link" type="button">从当前页读取</button>
+          <h2 data-i18n="side.imageTitle">图片</h2>
+          <button
+            id="readTab"
+            class="link"
+            type="button"
+            data-i18n="side.readTab"
+          >
+            从当前页读取
+          </button>
         </div>
         <div id="imageDrop" class="dropzone">
           <img id="imagePreview" class="preview hidden" alt="预览" />
-          <div id="dropHint" class="muted small">
+          <div id="dropHint" class="muted small" data-i18n="side.dropHint">
             拖入图片、粘贴截图，或从右键菜单选“收录这张图片”
           </div>
         </div>
         <div class="row gap wrap">
-          <button id="pickFile" class="ghost small-btn" type="button">
+          <button
+            id="pickFile"
+            class="ghost small-btn"
+            type="button"
+            data-i18n="side.chooseFile"
+          >
             选择文件
           </button>
           <input
@@ -99,8 +163,14 @@
             class="url-input"
             type="url"
             placeholder="或粘贴图片链接"
+            data-i18n-placeholder="side.imageUrlPlaceholder"
           />
-          <button id="fetchUrl" class="ghost small-btn" type="button">
+          <button
+            id="fetchUrl"
+            class="ghost small-btn"
+            type="button"
+            data-i18n="side.loadImage"
+          >
             读取
           </button>
         </div>
@@ -108,39 +178,91 @@
       </section>
 
       <section class="card">
-        <h2>收录信息</h2>
-        <label>标题<input id="title" type="text" maxlength="200" /></label>
-        <label>中文提示词<textarea id="promptZh" rows="3"></textarea></label>
+        <h2 data-i18n="side.formTitle">收录信息</h2>
         <label
-          >English prompt<textarea id="promptEn" rows="3"></textarea>
+          ><span data-i18n="side.titleLabel">标题</span
+          ><input id="title" type="text" maxlength="200"
+        /></label>
+        <label
+          ><span data-i18n="side.promptZh">中文提示词</span
+          ><textarea id="promptZh" rows="3"></textarea>
         </label>
-        <label>反向提示词<input id="negativePrompt" type="text" /></label>
-        <div class="field-label">标签</div>
+        <label
+          ><span data-i18n="side.promptEn">English prompt</span
+          ><textarea id="promptEn" rows="3"></textarea>
+        </label>
+        <label
+          ><span data-i18n="side.negative">反向提示词</span
+          ><input id="negativePrompt" type="text"
+        /></label>
+        <div class="field-label" data-i18n="side.tags">标签</div>
         <div class="tag-picker">
           <div id="selectedTags" class="tag-chips"></div>
-          <input id="tagDraft" type="text" placeholder="输入新标签，回车加入" />
+          <input
+            id="tagDraft"
+            type="text"
+            placeholder="输入新标签，回车加入"
+            data-i18n-placeholder="side.tagDraftPlaceholder"
+          />
           <div class="tag-tools">
-            <input id="tagFilter" type="text" placeholder="筛选标签…" />
-            <button id="selectAllTags" class="link" type="button">全选</button>
-            <button id="invertTags" class="link" type="button">反选</button>
-            <button id="clearTags" class="link" type="button">清空</button>
+            <input
+              id="tagFilter"
+              type="text"
+              placeholder="筛选标签…"
+              data-i18n-placeholder="side.tagFilterPlaceholder"
+            />
+            <button
+              id="selectAllTags"
+              class="link"
+              type="button"
+              data-i18n="side.selectAll"
+            >
+              全选
+            </button>
+            <button
+              id="invertTags"
+              class="link"
+              type="button"
+              data-i18n="side.invertTags"
+            >
+              反选
+            </button>
+            <button
+              id="clearTags"
+              class="link"
+              type="button"
+              data-i18n="side.clearTags"
+            >
+              清空
+            </button>
           </div>
           <div id="tagOptions" class="tag-options"></div>
         </div>
 
-        <div class="field-label">NSFW</div>
+        <div class="field-label" data-i18n="side.nsfw">NSFW</div>
         <div id="nsfwPicker" class="segmented" role="group" aria-label="NSFW">
           <button type="button" data-level="0">SFW</button>
           <button type="button" data-level="1">Suggestive</button>
           <button type="button" data-level="2">NSFW</button>
         </div>
 
-        <label>来源页面<input id="sourceUrl" type="url" /></label>
+        <label
+          ><span data-i18n="side.sourceUrl">来源页面</span
+          ><input id="sourceUrl" type="url"
+        /></label>
         <p id="formError" class="error small hidden"></p>
-        <button id="submit" class="primary full" type="button">提交收录</button>
-        <p class="muted tiny">草稿自动保存在本机；关闭侧边栏不会丢失。</p>
+        <button
+          id="submit"
+          class="primary full"
+          type="button"
+          data-i18n="side.submit"
+        >
+          提交收录
+        </button>
+        <p class="muted tiny" data-i18n="side.draftHint">
+          草稿自动保存在本机；关闭侧边栏不会丢失。
+        </p>
       </section>
-
     </main>
 
     <div id="toast" class="toast hidden"></div>

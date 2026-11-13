@@ -1,16 +1,24 @@
 import {
   DEFAULT_SETTINGS,
   loadContext,
+  loadLang,
   loadQueue,
   loadSettings,
   normalizeBase,
   refreshBadge,
   saveQueue,
   saveSettings,
+  type Lang,
   type QueueItem,
   type Settings,
   type SubmitPayload,
 } from "./shared";
+import { t } from "./i18n";
+
+let currentLang: Lang = "zh";
+void loadLang().then((lang) => {
+  currentLang = lang;
+});
 
 class ApiRequestError extends Error {
   readonly status: number;
@@ -69,7 +77,7 @@ async function apiFetch(
       headers,
     });
   } catch {
-    throw new ApiRequestError("网络不可用", 0, "NETWORK_ERROR", true);
+    throw new ApiRequestError(t(currentLang, "bg.network"), 0, "NETWORK_ERROR", true);
   }
 
   if (!response.ok) {
@@ -177,7 +185,7 @@ async function processQueue(
       const apiError =
         error instanceof ApiRequestError
           ? error
-          : new ApiRequestError("提交失败", 0, "UNKNOWN", true);
+          : new ApiRequestError(t(currentLang, "bg.submitFailed"), 0, "UNKNOWN", true);
 
       if (apiError.retryable) {
         const attempts = item.attempts + 1;
@@ -202,10 +210,12 @@ async function processQueue(
 
 async function fetchImageData(url: string): Promise<string> {
   const response = await fetch(url, { credentials: "include" });
-  if (!response.ok) throw new Error(`图片读取失败（HTTP ${response.status}）`);
+  if (!response.ok) throw new Error(
+    t(currentLang, "bg.imageReadFailed", { status: response.status }),
+  );
 
   const blob = await response.blob();
-  if (blob.size > 10 * 1024 * 1024) throw new Error("图片超过 10MB");
+  if (blob.size > 10 * 1024 * 1024) throw new Error(t(currentLang, "bg.imageTooLarge"));
 
   return arrayBufferToDataUrl(
     await blob.arrayBuffer(),
@@ -220,7 +230,7 @@ async function readActiveTab(): Promise<{
   pageTitle: string;
 }> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) throw new Error("没有活动标签页");
+  if (!tab?.id) throw new Error(t(currentLang, "bg.noActiveTab"));
 
   const [result] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
@@ -272,21 +282,29 @@ async function initialize(): Promise<void> {
     // Older Chrome versions may not expose setPanelBehavior.
   }
 
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: "promptai-collect-image",
-      title: "收录这张图片到 Prompt-AI.ART",
-      contexts: ["image"],
-    });
-    chrome.contextMenus.create({
-      id: "promptai-collect-selection",
-      title: "用选中文字收录到 Prompt-AI.ART",
-      contexts: ["selection"],
-    });
-  });
+  await updateContextMenus();
 
   chrome.alarms.create("promptai-process-queue", { periodInMinutes: 1 });
   await refreshBadge();
+}
+
+async function updateContextMenus(): Promise<void> {
+  const lang = await loadLang();
+  await new Promise<void>((resolve) => {
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: "promptai-collect-image",
+        title: t(lang, "menu.image"),
+        contexts: ["image"],
+      });
+      chrome.contextMenus.create({
+        id: "promptai-collect-selection",
+        title: t(lang, "menu.selection"),
+        contexts: ["selection"],
+      });
+      resolve();
+    });
+  });
 }
 
 chrome.runtime.onInstalled.addListener(() => void initialize());
@@ -327,8 +345,13 @@ chrome.alarms.onAlarm.addListener((alarm: any) => {
   if (alarm.name === "promptai-process-queue") void processQueue(false);
 });
 
-chrome.storage.onChanged.addListener((_changes: any, area: string) => {
-  if (area === "local") void refreshBadge();
+chrome.storage.onChanged.addListener((changes: any, area: string) => {
+  if (area !== "local") return;
+  void refreshBadge();
+  if (changes?.lang) {
+    currentLang = changes.lang.newValue === "en" ? "en" : "zh";
+    void updateContextMenus();
+  }
 });
 
 chrome.runtime.onMessage.addListener(
@@ -392,7 +415,7 @@ chrome.runtime.onMessage.addListener(
               const apiError =
                 error instanceof ApiRequestError
                   ? error
-                  : new ApiRequestError("提交失败", 0, "UNKNOWN", true);
+                  : new ApiRequestError(t(currentLang, "bg.submitFailed"), 0, "UNKNOWN", true);
 
               if (apiError.retryable) {
                 await enqueue(item, apiError.message);
@@ -481,7 +504,9 @@ chrome.runtime.onMessage.addListener(
           error instanceof ApiRequestError
             ? error
             : new ApiRequestError(
-                error instanceof Error ? error.message : "操作失败",
+                error instanceof Error
+                  ? error.message
+                  : t(currentLang, "bg.operationFailed"),
                 0,
                 "UNKNOWN",
                 false,

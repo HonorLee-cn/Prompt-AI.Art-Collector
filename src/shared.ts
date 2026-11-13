@@ -58,6 +58,9 @@ const SETTINGS_KEY = "settings";
 const DRAFT_KEY = "draft";
 const QUEUE_KEY = "queue";
 const CONTEXT_KEY = "pendingContext";
+const LANG_KEY = "lang";
+
+export type Lang = "zh" | "en";
 
 export const DEFAULT_SETTINGS: Settings = {
   // Local test defaults. Change both to the production domain before packaging.
@@ -81,6 +84,15 @@ export async function loadSettings(): Promise<Settings> {
     apiBase: DEFAULT_SETTINGS.apiBase,
     webBase: DEFAULT_SETTINGS.webBase,
   };
+}
+
+export async function loadLang(): Promise<Lang> {
+  const result = await chrome.storage.local.get(LANG_KEY);
+  return result?.[LANG_KEY] === "en" ? "en" : "zh";
+}
+
+export async function saveLang(lang: Lang): Promise<void> {
+  await chrome.storage.local.set({ [LANG_KEY]: lang });
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
