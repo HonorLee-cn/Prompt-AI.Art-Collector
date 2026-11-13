@@ -437,10 +437,7 @@ chrome.runtime.onMessage.addListener(
             const settings = await loadSettings();
             let response: any;
             try {
-              response = await apiFetch(
-                settings,
-                settings.apiKey ? "/tags/all?limit=500" : "/tags?limit=200",
-              );
+              response = await apiFetch(settings, "/tags/all?limit=500");
             } catch {
               response = await apiFetch(settings, "/tags?limit=200");
             }
