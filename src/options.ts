@@ -4,8 +4,7 @@ const $ = <T extends HTMLElement>(id: string): T =>
   document.getElementById(id) as T;
 const apiKey = $<HTMLInputElement>("apiKey");
 const keyField = $<HTMLElement>("keyField");
-const saveButton = $<HTMLButtonElement>("save");
-const verifyButton = $<HTMLButtonElement>("verify");
+const keyActions = $<HTMLElement>("keyActions");
 const clearKeyButton = $<HTMLButtonElement>("clearKey");
 const status = $<HTMLElement>("status");
 let settings: Settings | null = null;
@@ -18,8 +17,7 @@ async function load(): Promise<void> {
   if (!settings) return;
   const bound = Boolean(settings.user);
   keyField.classList.toggle("hidden", bound);
-  saveButton.classList.toggle("hidden", bound);
-  verifyButton.classList.toggle("hidden", bound);
+  keyActions.classList.toggle("hidden", bound);
   clearKeyButton.classList.toggle("hidden", !bound);
   apiKey.placeholder = settings.apiKey ? "已保存，留空保留" : "pa_…";
   status.textContent = settings.user

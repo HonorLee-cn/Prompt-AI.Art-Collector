@@ -54,14 +54,14 @@
           type="password"
           placeholder="留空保留已保存的 Key"
       /></label>
-      <div class="row gap" style="margin-top: 10px">
+      <div id="keyActions" class="row gap" style="margin-top: 10px">
         <button id="save" class="primary" type="button">保存</button>
         <button id="verify" class="ghost" type="button">保存并验证</button>
-        <button id="clearKey" class="ghost hidden" type="button">
-          解除绑定
-        </button>
         <button id="getApiKey" class="ghost" type="button">获取 API KEY</button>
       </div>
+      <button id="clearKey" class="ghost full unbind hidden" type="button">
+        解除绑定
+      </button>
       <p id="status" class="muted small"></p>
     </section>
 

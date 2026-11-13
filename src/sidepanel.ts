@@ -84,6 +84,7 @@ function updateAuth(): void {
   keyField.classList.toggle("hidden", bound);
   verifyKeyButton.classList.toggle("hidden", bound);
   clearKeyButton.classList.toggle("hidden", !bound);
+  getApiKey.classList.toggle("hidden", bound);
 }
 
 function updateBadge(): void {
