@@ -15,9 +15,7 @@ export interface Settings {
 
 export interface Draft {
   title: string;
-  promptZh: string;
-  promptEn: string;
-  negativePrompt: string;
+  promptText: string;
   tags: string[];
   nsfwLevel: number;
   sourceUrl: string;
@@ -86,9 +84,19 @@ export async function loadSettings(): Promise<Settings> {
   };
 }
 
+function detectBrowserLang(): Lang {
+  const raw =
+    (typeof chrome !== "undefined" && chrome.i18n?.getUILanguage?.()) ||
+    (typeof navigator !== "undefined" ? navigator.language : "") ||
+    "en";
+  return raw.toLowerCase().startsWith("zh") ? "zh" : "en";
+}
+
 export async function loadLang(): Promise<Lang> {
   const result = await chrome.storage.local.get(LANG_KEY);
-  return result?.[LANG_KEY] === "en" ? "en" : "zh";
+  const stored = result?.[LANG_KEY];
+  if (stored === "zh" || stored === "en") return stored;
+  return detectBrowserLang();
 }
 
 export async function saveLang(lang: Lang): Promise<void> {

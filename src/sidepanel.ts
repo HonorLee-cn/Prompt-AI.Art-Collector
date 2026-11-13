@@ -44,9 +44,7 @@ const imageError = $<HTMLElement>("imageError");
 const fileInput = $<HTMLInputElement>("fileInput");
 const imageUrl = $<HTMLInputElement>("imageUrl");
 const titleInput = $<HTMLInputElement>("title");
-const promptZh = $<HTMLTextAreaElement>("promptZh");
-const promptEn = $<HTMLTextAreaElement>("promptEn");
-const negativePrompt = $<HTMLInputElement>("negativePrompt");
+const promptText = $<HTMLTextAreaElement>("promptText");
 const sourceUrl = $<HTMLInputElement>("sourceUrl");
 const selectedTags = $<HTMLElement>("selectedTags");
 const tagDraft = $<HTMLInputElement>("tagDraft");
@@ -230,9 +228,7 @@ function fillSettings(): void {
 function readForm(): Draft {
   return {
     title: titleInput.value.trim(),
-    promptZh: promptZh.value.trim(),
-    promptEn: promptEn.value.trim(),
-    negativePrompt: negativePrompt.value.trim(),
+    promptText: promptText.value.trim(),
     tags: selectedTagValues,
     nsfwLevel: nsfwValue,
     sourceUrl: sourceUrl.value.trim(),
@@ -243,9 +239,16 @@ function readForm(): Draft {
 
 function applyForm(draft: Partial<Draft>): void {
   titleInput.value = draft.title ?? "";
-  promptZh.value = draft.promptZh ?? "";
-  promptEn.value = draft.promptEn ?? "";
-  negativePrompt.value = draft.negativePrompt ?? "";
+  const legacyPrompt = draft as Partial<Draft> & {
+    promptZh?: string;
+    promptEn?: string;
+  };
+  promptText.value =
+    draft.promptText ??
+    (lang === "zh"
+      ? (legacyPrompt.promptZh ?? legacyPrompt.promptEn)
+      : (legacyPrompt.promptEn ?? legacyPrompt.promptZh)) ??
+    "";
   const legacyTags = (draft as unknown as { tags?: unknown }).tags;
   selectedTagValues = Array.isArray(legacyTags)
     ? legacyTags.map((value) => String(value))
@@ -288,9 +291,7 @@ function clearImage(): void {
 function clearForm(): void {
   applyForm({
     title: "",
-    promptZh: "",
-    promptEn: "",
-    negativePrompt: "",
+    promptText: "",
     tags: [],
     nsfwLevel: 0,
     sourceUrl: "",
@@ -382,8 +383,8 @@ async function readTab(): Promise<void> {
 
     if (response.pageUrl && !sourceUrl.value)
       sourceUrl.value = response.pageUrl;
-    if (response.selectionText && !promptZh.value)
-      promptZh.value = response.selectionText;
+    if (response.selectionText && !promptText.value)
+      promptText.value = response.selectionText;
     if (response.imageUrl) await fetchImage(response.imageUrl);
     else
       showError(
@@ -440,7 +441,8 @@ async function clearKey(): Promise<void> {
 async function submit(): Promise<void> {
   showError(formError, "");
 
-  if (!promptZh.value.trim() && !promptEn.value.trim()) {
+  const prompt = promptText.value.trim();
+  if (!prompt) {
     showError(formError, t(lang, "side.error.promptRequired"));
     return;
   }
@@ -452,9 +454,9 @@ async function submit(): Promise<void> {
   const item = {
     clientRef: crypto.randomUUID(),
     title: titleInput.value.trim(),
-    promptZh: promptZh.value.trim(),
-    promptEn: promptEn.value.trim(),
-    negativePrompt: negativePrompt.value.trim(),
+    promptZh: lang === "zh" ? prompt : "",
+    promptEn: lang === "en" ? prompt : "",
+    negativePrompt: "",
     tags: selectedTagValues,
     nsfwLevel: nsfwValue,
     imageDataUrl,
@@ -524,19 +526,13 @@ async function init(): Promise<void> {
   if (draft) applyForm(draft);
 
   if (context?.pageUrl && !sourceUrl.value) sourceUrl.value = context.pageUrl;
-  if (context?.selectionText && !promptZh.value)
-    promptZh.value = context.selectionText;
+  if (context?.selectionText && !promptText.value)
+    promptText.value = context.selectionText;
 
   loading = false;
   await loadTags();
 
-  for (const element of [
-    titleInput,
-    promptZh,
-    promptEn,
-    negativePrompt,
-    sourceUrl,
-  ]) {
+  for (const element of [titleInput, promptText, sourceUrl]) {
     element.addEventListener("input", scheduleDraft);
   }
   tagFilter.addEventListener("input", renderTags);
@@ -608,8 +604,8 @@ $("retryQueue").addEventListener("click", async () => {
 $("useContext").addEventListener("click", async () => {
   if (context?.imageUrl) await fetchImage(context.imageUrl);
   if (context?.pageUrl && !sourceUrl.value) sourceUrl.value = context.pageUrl;
-  if (context?.selectionText && !promptZh.value)
-    promptZh.value = context.selectionText;
+  if (context?.selectionText && !promptText.value)
+    promptText.value = context.selectionText;
   await sendMessage({ type: "CLEAR_CONTEXT" });
   context = null;
   renderContext();

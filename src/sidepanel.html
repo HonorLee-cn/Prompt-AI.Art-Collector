@@ -184,17 +184,14 @@
           ><input id="title" type="text" maxlength="200"
         /></label>
         <label
-          ><span data-i18n="side.promptZh">中文提示词</span
-          ><textarea id="promptZh" rows="3"></textarea>
+          ><span data-i18n="side.promptLabel">提示词</span
+          ><textarea
+            id="promptText"
+            rows="4"
+            placeholder="输入提示词…"
+            data-i18n-placeholder="side.promptPlaceholder"
+          ></textarea>
         </label>
-        <label
-          ><span data-i18n="side.promptEn">English prompt</span
-          ><textarea id="promptEn" rows="3"></textarea>
-        </label>
-        <label
-          ><span data-i18n="side.negative">反向提示词</span
-          ><input id="negativePrompt" type="text"
-        /></label>
         <div class="field-label" data-i18n="side.tags">标签</div>
         <div class="tag-picker">
           <div id="selectedTags" class="tag-chips"></div>

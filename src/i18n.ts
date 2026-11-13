@@ -26,9 +26,8 @@ const zh = {
   "side.loadImage": "读取",
   "side.formTitle": "收录信息",
   "side.titleLabel": "标题",
-  "side.promptZh": "中文提示词",
-  "side.promptEn": "English prompt",
-  "side.negative": "反向提示词",
+  "side.promptLabel": "提示词",
+  "side.promptPlaceholder": "输入提示词…",
   "side.tags": "标签",
   "side.tagDraftPlaceholder": "输入新标签，回车加入",
   "side.tagFilterPlaceholder": "筛选标签…",
@@ -61,7 +60,7 @@ const zh = {
   "side.toast.queued": "已加入离线队列，联网后自动重试",
   "side.toast.queueRetried": "离线队列已重试",
   "side.toast.verifyFailed": "验证失败",
-  "side.error.promptRequired": "至少填写中文或英文提示词。",
+  "side.error.promptRequired": "请填写提示词。",
   "side.error.imageRequired": "请先添加图片（扩展只支持图片）。",
   "side.error.apiKey":
     "API Key 失效或未绑定，请在“设置”中重新绑定；草稿已保留。",
@@ -140,9 +139,8 @@ const en: Record<MessageKey, string> = {
   "side.loadImage": "Load",
   "side.formTitle": "Collection details",
   "side.titleLabel": "Title",
-  "side.promptZh": "Chinese prompt",
-  "side.promptEn": "English prompt",
-  "side.negative": "Negative prompt",
+  "side.promptLabel": "Prompt",
+  "side.promptPlaceholder": "Enter a prompt…",
   "side.tags": "Tags",
   "side.tagDraftPlaceholder": "Type a new tag, press Enter",
   "side.tagFilterPlaceholder": "Filter tags…",
@@ -176,7 +174,7 @@ const en: Record<MessageKey, string> = {
   "side.toast.queued": "Added to the offline queue; will retry when online",
   "side.toast.queueRetried": "Offline queue retried",
   "side.toast.verifyFailed": "Verification failed",
-  "side.error.promptRequired": "Enter a Chinese or English prompt.",
+  "side.error.promptRequired": "Enter a prompt.",
   "side.error.imageRequired": "Add an image first (images only).",
   "side.error.apiKey":
     "API key is invalid or missing. Rebind it in Settings; your draft is kept.",
@@ -273,6 +271,7 @@ export function bindLangSwitch(onChange: (lang: Lang) => void): void {
     button.addEventListener("click", () => {
       const lang: Lang = button.dataset.lang === "en" ? "en" : "zh";
       if (button.classList.contains("active")) return;
+      onChange(lang);
       void saveLang(lang);
     });
   }
