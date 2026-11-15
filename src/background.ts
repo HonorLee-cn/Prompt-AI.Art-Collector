@@ -465,8 +465,13 @@ chrome.runtime.onMessage.addListener(
               response = await apiFetch(settings, "/tags?limit=200");
             }
             const tags = (response?.data ?? [])
-              .map((tag: any) => String(tag?.nameZh ?? "").trim())
-              .filter(Boolean);
+              .map((tag: any) => ({
+                id: tag?.id ? String(tag.id) : undefined,
+                slug: tag?.slug ? String(tag.slug) : undefined,
+                nameZh: String(tag?.nameZh ?? "").trim(),
+                nameEn: tag?.nameEn ? String(tag.nameEn).trim() : null,
+              }))
+              .filter((tag: any) => tag.nameZh);
             sendResponse({ ok: true, tags });
             break;
           }

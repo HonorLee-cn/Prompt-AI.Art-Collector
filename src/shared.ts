@@ -13,6 +13,13 @@ export interface Settings {
   user: ExtensionUser | null;
 }
 
+export interface TagOption {
+  id?: string;
+  slug?: string;
+  nameZh: string;
+  nameEn: string | null;
+}
+
 export interface Draft {
   title: string;
   promptText: string;

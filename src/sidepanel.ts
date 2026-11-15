@@ -9,6 +9,7 @@ import {
   type PendingContext,
   type QueueItem,
   type Settings,
+  type TagOption,
 } from "./shared";
 import { applyI18n, bindLangSwitch, markLangSwitch, t } from "./i18n";
 
@@ -53,7 +54,7 @@ const tagOptions = $<HTMLElement>("tagOptions");
 const nsfwPicker = $<HTMLElement>("nsfwPicker");
 const getApiKey = $<HTMLButtonElement>("getApiKey");
 const queueRow = $<HTMLElement>("queueRow");
-let availableTags: string[] = [];
+let availableTags: TagOption[] = [];
 let selectedTagValues: string[] = [];
 let nsfwValue = 0;
 const MAX_TAGS = 10;
@@ -125,6 +126,30 @@ function updateBadge(): void {
   retryQueue.classList.toggle("hidden", queue.length === 0);
 }
 
+function tagForName(name: string): TagOption {
+  const key = name.trim().toLowerCase();
+  return (
+    availableTags.find((tag) => tag.nameZh.toLowerCase() === key) ??
+    availableTags.find((tag) => (tag.nameEn ?? "").toLowerCase() === key) ?? {
+      nameZh: name,
+      nameEn: null,
+    }
+  );
+}
+
+function tagDisplay(tag: TagOption): string {
+  return lang === "en" ? tag.nameEn?.trim() || tag.nameZh : tag.nameZh;
+}
+
+function resolveTagName(raw: string): string {
+  return tagForName(raw).nameZh;
+}
+
+function matchesTagQuery(tag: TagOption, query: string): boolean {
+  if (!query) return true;
+  return `${tag.nameZh} ${tag.nameEn ?? ""}`.toLowerCase().includes(query);
+}
+
 function renderTags(): void {
   selectedTags.innerHTML = "";
   if (nsfwPicker) {
@@ -136,7 +161,7 @@ function renderTags(): void {
   for (const name of selectedTagValues) {
     const chip = document.createElement("span");
     chip.className = "tag-chip";
-    chip.append(`#${name}`);
+    chip.append(`#${tagDisplay(tagForName(name))}`);
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "×";
@@ -146,9 +171,9 @@ function renderTags(): void {
   }
 
   const query = tagFilter.value.trim().toLowerCase();
-  const names = [...new Set([...availableTags, ...selectedTagValues])]
-    .filter((name) => !query || name.toLowerCase().includes(query))
-    .sort((a, b) => a.localeCompare(b, "zh-CN"));
+  const names = [...new Set([...availableTags.map((tag) => tag.nameZh), ...selectedTagValues])]
+    .filter((name) => matchesTagQuery(tagForName(name), query))
+    .sort((a, b) => tagDisplay(tagForName(a)).localeCompare(tagDisplay(tagForName(b))));
   tagOptions.innerHTML = "";
   if (names.length === 0) {
     const empty = document.createElement("span");
@@ -161,7 +186,7 @@ function renderTags(): void {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `tag-option${selectedTagValues.includes(name) ? " active" : ""}`;
-    button.textContent = `#${name}`;
+    button.textContent = `#${tagDisplay(tagForName(name))}`;
     button.addEventListener("click", () => toggleTag(name));
     tagOptions.append(button);
   }
@@ -178,8 +203,9 @@ function toggleTag(name: string): void {
 }
 
 function addTag(): void {
-  const name = tagDraft.value.trim().replace(/^#/, "");
-  if (!name) return;
+  const raw = tagDraft.value.trim().replace(/^#/, "");
+  if (!raw) return;
+  const name = resolveTagName(raw);
   if (!selectedTagValues.includes(name) && selectedTagValues.length < MAX_TAGS) {
     selectedTagValues = [...selectedTagValues, name];
   }
@@ -189,10 +215,11 @@ function addTag(): void {
 }
 
 async function loadTags(): Promise<void> {
-  const response = await sendMessage<{ ok: boolean; tags?: string[] }>({
+  const response = await sendMessage<{ ok: boolean; tags?: TagOption[] }>({
     type: "GET_TAGS",
   });
   availableTags = response.ok ? (response.tags ?? []) : [];
+  selectedTagValues = [...new Set(selectedTagValues.map(resolveTagName))];
   renderTags();
 }
 
@@ -561,14 +588,17 @@ getApiKey.addEventListener("click", () => {
   void sendMessage({ type: "OPEN_API_KEY_PAGE" });
 });
 $("selectAllTags").addEventListener("click", () => {
-  selectedTagValues = [...new Set([...selectedTagValues, ...availableTags])].slice(0, MAX_TAGS);
+  selectedTagValues = [...new Set([...selectedTagValues, ...availableTags.map((tag) => tag.nameZh)])].slice(
+    0,
+    MAX_TAGS,
+  );
   renderTags();
   scheduleDraft();
 });
 $("invertTags").addEventListener("click", () => {
   const query = tagFilter.value.trim().toLowerCase();
-  const names = [...new Set([...availableTags, ...selectedTagValues])].filter(
-    (name) => !query || name.toLowerCase().includes(query),
+  const names = [...new Set([...availableTags.map((tag) => tag.nameZh), ...selectedTagValues])].filter(
+    (name) => matchesTagQuery(tagForName(name), query),
   );
   const next = new Set(selectedTagValues);
   for (const name of names) {
