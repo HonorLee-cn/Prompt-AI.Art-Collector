@@ -480,7 +480,8 @@ async function submit(): Promise<void> {
 
   const item = {
     clientRef: crypto.randomUUID(),
-    title: titleInput.value.trim(),
+    title: lang === "zh" ? titleInput.value.trim() : "",
+    titleEn: lang === "en" ? titleInput.value.trim() : "",
     promptZh: lang === "zh" ? prompt : "",
     promptEn: lang === "en" ? prompt : "",
     negativePrompt: "",

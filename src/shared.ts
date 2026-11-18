@@ -33,6 +33,7 @@ export interface Draft {
 export interface SubmitPayload {
   clientRef: string;
   title: string;
+  titleEn?: string;
   promptZh: string;
   promptEn: string;
   negativePrompt: string;

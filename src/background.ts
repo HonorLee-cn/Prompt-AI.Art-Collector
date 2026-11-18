@@ -115,6 +115,7 @@ async function submitItem(item: SubmitPayload): Promise<any> {
 
   const body = {
     title: item.title || null,
+    titleEn: item.titleEn || null,
     promptZh: item.promptZh || null,
     promptEn: item.promptEn || null,
     negativePrompt: item.negativePrompt || null,
