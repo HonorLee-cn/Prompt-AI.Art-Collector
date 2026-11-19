@@ -43,7 +43,6 @@ const dropHint = $<HTMLElement>("dropHint");
 const imageDrop = $<HTMLElement>("imageDrop");
 const imageError = $<HTMLElement>("imageError");
 const fileInput = $<HTMLInputElement>("fileInput");
-const imageUrl = $<HTMLInputElement>("imageUrl");
 const titleInput = $<HTMLInputElement>("title");
 const promptText = $<HTMLTextAreaElement>("promptText");
 const sourceUrl = $<HTMLInputElement>("sourceUrl");
@@ -615,16 +614,18 @@ $("clearTags").addEventListener("click", () => {
   renderTags();
   scheduleDraft();
 });
-$("pickFile").addEventListener("click", () => fileInput.click());
+imageDrop.addEventListener("click", () => fileInput.click());
+imageDrop.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    fileInput.click();
+  }
+});
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
   if (file) void onFile(file);
   fileInput.value = "";
 });
-$("fetchUrl").addEventListener(
-  "click",
-  () => void fetchImage(imageUrl.value.trim()),
-);
 $("readTab").addEventListener("click", () => void readTab());
 $("submit").addEventListener("click", () => void submit());
 $("retryQueue").addEventListener("click", async () => {
@@ -662,16 +663,6 @@ imageDrop.addEventListener("drop", (event) => {
   if (file) void onFile(file);
 });
 
-document.addEventListener("paste", (event) => {
-  const item = [...(event.clipboardData?.items ?? [])].find((entry) =>
-    entry.type.startsWith("image/"),
-  );
-  const file = item?.getAsFile();
-  if (file) {
-    event.preventDefault();
-    void onFile(file);
-  }
-});
 
 window.addEventListener("beforeunload", () => {
   if (!loading) void saveDraft(readForm());

@@ -19,11 +19,7 @@ const zh = {
   "side.contextDismiss": "忽略",
   "side.imageTitle": "图片",
   "side.readTab": "从当前页读取",
-  "side.dropHint":
-    "拖入图片、粘贴截图，或从右键菜单选“收录这张图片”",
-  "side.chooseFile": "选择文件",
-  "side.imageUrlPlaceholder": "或粘贴图片链接",
-  "side.loadImage": "读取",
+  "side.dropHint": "拖入图片，或点击选择",
   "side.formTitle": "收录信息",
   "side.titleLabel": "标题",
   "side.promptLabel": "提示词",
@@ -67,7 +63,7 @@ const zh = {
   "side.error.submitFailed": "提交失败",
   "side.error.readPage": "读取页面失败",
   "side.error.noImage":
-    "当前页面没有找到可用图片，可右键图片或手动粘贴链接。",
+    "当前页面没有找到可用图片，可右键图片，或将图片拖入/点击上传。",
   "side.error.readingImage": "正在读取图片…",
   "side.error.readImage": "读取图片失败",
   "side.error.loadFailed": "读取失败",
@@ -86,7 +82,7 @@ const zh = {
   "options.usageLine1":
     "点击工具栏图标打开 Side Panel；在任意图片上右键选择“收录这张图片到 Prompt-AI.ART”，或按 Ctrl+Shift+Y / Command+Shift+Y 打开。",
   "options.usageLine2":
-    "扩展只处理当前页/右键/粘贴/拖入的图片，不读取浏览历史。",
+    "扩展只处理当前页/右键/拖入或点击上传的图片，不读取浏览历史。",
   "options.connectionTitle": "连接设置",
   "options.apiKeyLabel": "API Key",
   "options.keyPlaceholder": "留空保留已保存的 Key",
@@ -132,11 +128,7 @@ const en: Record<MessageKey, string> = {
   "side.contextDismiss": "Dismiss",
   "side.imageTitle": "Image",
   "side.readTab": "Read from page",
-  "side.dropHint":
-    "Drop an image, paste a screenshot, or use “Collect this image” from the context menu",
-  "side.chooseFile": "Choose file",
-  "side.imageUrlPlaceholder": "Or paste an image URL",
-  "side.loadImage": "Load",
+  "side.dropHint": "Drop an image here, or click to choose",
   "side.formTitle": "Collection details",
   "side.titleLabel": "Title",
   "side.promptLabel": "Prompt",
@@ -181,7 +173,7 @@ const en: Record<MessageKey, string> = {
   "side.error.submitFailed": "Submission failed",
   "side.error.readPage": "Failed to read page",
   "side.error.noImage":
-    "No usable image found on this page. Use the image context menu or paste a URL.",
+    "No usable image found on this page. Use the image context menu, or drag/drop or click to upload.",
   "side.error.readingImage": "Loading image…",
   "side.error.readImage": "Failed to load image",
   "side.error.loadFailed": "Load failed",
@@ -200,7 +192,7 @@ const en: Record<MessageKey, string> = {
   "options.usageLine1":
     "Click the toolbar icon to open the side panel. Right-click any image and choose “Collect this image to Prompt-AI.ART”, or press Ctrl+Shift+Y / Command+Shift+Y.",
   "options.usageLine2":
-    "The extension only handles images from the current page, context menu, clipboard, or drag-and-drop. It never reads browsing history.",
+    "The extension only handles images from the current page, the context menu, or drag-and-drop/click upload. It never reads browsing history.",
   "options.connectionTitle": "Connection",
   "options.apiKeyLabel": "API Key",
   "options.keyPlaceholder": "Leave blank to keep the saved key",

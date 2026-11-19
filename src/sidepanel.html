@@ -137,43 +137,23 @@
             从当前页读取
           </button>
         </div>
-        <div id="imageDrop" class="dropzone">
+        <div
+          id="imageDrop"
+          class="dropzone"
+          role="button"
+          tabindex="0"
+        >
           <img id="imagePreview" class="preview hidden" alt="预览" />
           <div id="dropHint" class="muted small" data-i18n="side.dropHint">
-            拖入图片、粘贴截图，或从右键菜单选“收录这张图片”
+            拖入图片，或点击选择
           </div>
         </div>
-        <div class="row gap wrap">
-          <button
-            id="pickFile"
-            class="ghost small-btn"
-            type="button"
-            data-i18n="side.chooseFile"
-          >
-            选择文件
-          </button>
-          <input
-            id="fileInput"
-            class="hidden"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-          />
-          <input
-            id="imageUrl"
-            class="url-input"
-            type="url"
-            placeholder="或粘贴图片链接"
-            data-i18n-placeholder="side.imageUrlPlaceholder"
-          />
-          <button
-            id="fetchUrl"
-            class="ghost small-btn"
-            type="button"
-            data-i18n="side.loadImage"
-          >
-            读取
-          </button>
-        </div>
+        <input
+          id="fileInput"
+          class="hidden"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+        />
         <p id="imageError" class="error small hidden"></p>
       </section>
 
