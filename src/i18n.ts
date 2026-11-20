@@ -300,6 +300,18 @@ export function applyI18n(lang: Lang, root: ParentNode = document): void {
     const key = element.dataset.i18nPlaceholder;
     if (key) element.placeholder = t(lang, key);
   }
+  for (const element of root.querySelectorAll<HTMLElement>(
+    "[data-i18n-title]",
+  )) {
+    const key = element.dataset.i18nTitle;
+    if (key) element.title = t(lang, key);
+  }
+  for (const element of root.querySelectorAll<HTMLElement>(
+    "[data-i18n-aria-label]",
+  )) {
+    const key = element.dataset.i18nAriaLabel;
+    if (key) element.setAttribute("aria-label", t(lang, key));
+  }
 }
 
 export function markLangSwitch(lang: Lang): void {

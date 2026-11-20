@@ -502,6 +502,43 @@ button {
   white-space: nowrap;
 }
 
+.icon-action {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  border-radius: 999px;
+  background: #0284c7;
+  color: #f0f9ff;
+  padding: 0;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.icon-action:hover {
+  border-color: #7dd3fc;
+  background: #0ea5e9;
+  transform: translateY(-1px);
+}
+
+.icon-action:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+.icon-action svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .reverse-action {
   color: #7dd3fc;
   font-size: 11px;
