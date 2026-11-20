@@ -815,5 +815,30 @@ reverseCancelButton.addEventListener("click", closeReverseConfirm);
 reverseStartButton.addEventListener("click", () => void startReverse());
 reverseProgressCancel.addEventListener("click", closeReverseProgress);
 
+chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, area: string) => {
+  if (area !== "local") return;
+
+  if (changes.pendingContext) {
+    context = (changes.pendingContext.newValue as PendingContext | undefined) ?? null;
+    renderContext();
+    if (context) {
+      contextBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  if (changes.queue) {
+    queue = (changes.queue.newValue as QueueItem[] | undefined) ?? [];
+    updateBadge();
+  }
+
+  if (changes.settings) {
+    settings = {
+      ...(settings ?? { apiBase: "", webBase: "", apiKey: "", user: null }),
+      ...(changes.settings.newValue as Partial<Settings>),
+    };
+    fillSettings();
+  }
+});
+
 bindLangSwitch((next) => applyLanguage(next));
 void init();
