@@ -263,15 +263,21 @@ async function readActiveTab(): Promise<{
   );
 }
 
-async function openPanel(tabId?: number): Promise<void> {
-  try {
-    if (tabId) await chrome.sidePanel.open({ tabId });
-    else
-      await chrome.sidePanel.open({
-        windowId: chrome.windows.WINDOW_ID_CURRENT,
-      });
-  } catch {
-    // The panel can only be opened from a user gesture; the action click fallback remains.
+async function openPanel(tabId?: number, windowId?: number): Promise<void> {
+  const attempts: Array<{ tabId?: number; windowId?: number }> = [];
+  if (windowId != null) attempts.push({ windowId });
+  if (tabId != null) attempts.push({ tabId });
+  if (attempts.length === 0) {
+    attempts.push({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+  }
+
+  for (const options of attempts) {
+    try {
+      await chrome.sidePanel.open(options);
+      return;
+    } catch {
+      // Try the next target; the panel can only open from a user gesture.
+    }
   }
 }
 
@@ -318,7 +324,7 @@ chrome.commands.onCommand.addListener((command: any) => {
   if (command === "open-collector") {
     void chrome.tabs
       .query({ active: true, currentWindow: true })
-      .then(([tab]: any[]) => openPanel(tab?.id));
+      .then(([tab]: any[]) => openPanel(tab?.id, tab?.windowId));
   }
 });
 
@@ -339,7 +345,7 @@ chrome.contextMenus.onClicked.addListener((info: any, tab: any) => {
       createdAt: Date.now(),
     },
   });
-  void openPanel(tab?.id);
+  void openPanel(tab?.id, tab?.windowId);
 });
 
 chrome.alarms.onAlarm.addListener((alarm: any) => {
@@ -540,7 +546,7 @@ chrome.runtime.onMessage.addListener(
               active: true,
               currentWindow: true,
             });
-            await openPanel(tab?.id);
+            await openPanel(tab?.id, tab?.windowId);
             sendResponse({ ok: true });
             break;
           }
