@@ -36,6 +36,7 @@ const authState = $<HTMLElement>("authState");
 const authText = $<HTMLElement>("authText");
 const boundBadge = $<HTMLElement>("boundBadge");
 const boundNote = $<HTMLElement>("boundNote");
+const siteLink = $<HTMLAnchorElement>("siteLink");
 const contextModal = $<HTMLElement>("contextModal");
 const contextText = $<HTMLElement>("contextText");
 const imagePreview = $<HTMLImageElement>("imagePreview");
@@ -237,6 +238,7 @@ function applyLanguage(next: Lang): void {
 
 function updateAuth(): void {
   if (!settings) return;
+  siteLink.href = settings.webBase;
   const bound = Boolean(settings.user);
   if (bound) {
     authState.textContent = t(lang, "side.auth.bound");
