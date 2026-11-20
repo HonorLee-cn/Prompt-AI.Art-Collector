@@ -162,6 +162,14 @@ function renderImagePicker(): void {
     return;
   }
 
+  const columns = Array.from({ length: 3 }, () => {
+    const column = document.createElement("div");
+    column.className = "image-picker-column";
+    imagePickerGrid.append(column);
+    return column;
+  });
+  const columnHeights = [0, 0, 0];
+
   for (const image of pageImages) {
     const button = document.createElement("button");
     button.type = "button";
@@ -186,7 +194,12 @@ function renderImagePicker(): void {
       void choosePageImage(image);
     });
     button.append(preview, meta);
-    imagePickerGrid.append(button);
+
+    const target = columnHeights.indexOf(Math.min(...columnHeights));
+    columns[target]!.append(button);
+    columnHeights[target] =
+      (columnHeights[target] ?? 0) +
+      (image.width > 0 ? image.height / image.width : 1);
   }
 }
 
