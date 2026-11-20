@@ -323,6 +323,30 @@
     </div>
 
     <div
+      id="imagePicker"
+      class="modal-mask hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="imagePickerTitle"
+    >
+      <div class="modal-card image-picker-card">
+        <button
+          id="imagePickerClose"
+          class="success-close"
+          type="button"
+          aria-label="关闭"
+        >
+          ×
+        </button>
+        <h2 id="imagePickerTitle" data-i18n="side.imagePickerTitle">
+          选择图片
+        </h2>
+        <p id="imagePickerCount" class="small muted"></p>
+        <div id="imagePickerGrid" class="image-picker-grid"></div>
+      </div>
+    </div>
+
+    <div
       id="submitSuccess"
       class="modal-mask hidden"
       role="dialog"

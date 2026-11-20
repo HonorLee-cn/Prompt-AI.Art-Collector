@@ -73,6 +73,10 @@ const submitSuccess = $<HTMLElement>("submitSuccess");
 const submitSuccessBody = $<HTMLElement>("submitSuccessBody");
 const submitSuccessLink = $<HTMLAnchorElement>("submitSuccessLink");
 const submitSuccessClose = $<HTMLButtonElement>("submitSuccessClose");
+const imagePicker = $<HTMLElement>("imagePicker");
+const imagePickerClose = $<HTMLButtonElement>("imagePickerClose");
+const imagePickerCount = $<HTMLElement>("imagePickerCount");
+const imagePickerGrid = $<HTMLElement>("imagePickerGrid");
 
 interface ReverseResult {
   title?: string;
@@ -87,6 +91,15 @@ interface ReverseJob {
   result?: ReverseResult | null;
   errorMessage?: string | null;
 }
+
+interface PageImage {
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
+let pageImages: PageImage[] = [];
 
 let reverseRun = 0;
 let reverseLanguage: Lang = "zh";
@@ -133,6 +146,69 @@ async function closeSubmitSuccess(): Promise<void> {
   await sendMessage({ type: "CLEAR_CONTEXT" });
 }
 
+function renderImagePicker(): void {
+  imagePickerGrid.replaceChildren();
+  imagePickerCount.textContent = t(lang, "side.imagePickerCount", {
+    count: pageImages.length,
+  });
+  imagePickerClose.setAttribute("aria-label", t(lang, "side.imagePickerClose"));
+  imagePickerClose.title = t(lang, "side.imagePickerClose");
+
+  if (pageImages.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small muted";
+    empty.textContent = t(lang, "side.imagePickerEmpty");
+    imagePickerGrid.append(empty);
+    return;
+  }
+
+  for (const image of pageImages) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "image-picker-item";
+    button.title = image.alt;
+
+    const preview = document.createElement("img");
+    preview.src = image.url;
+    preview.alt = "";
+    preview.loading = "lazy";
+    preview.referrerPolicy = "no-referrer";
+
+    const meta = document.createElement("span");
+    meta.className = "image-picker-meta";
+    meta.textContent = `${image.width}×${image.height}`;
+
+    preview.addEventListener("error", () => {
+      button.classList.add("broken");
+      meta.textContent = t(lang, "side.imagePickerUnavailable");
+    });
+    button.addEventListener("click", () => {
+      void choosePageImage(image);
+    });
+    button.append(preview, meta);
+    imagePickerGrid.append(button);
+  }
+}
+
+function openImagePicker(images: PageImage[]): void {
+  pageImages = images;
+  renderImagePicker();
+  imagePicker.classList.remove("hidden");
+  imagePickerGrid.querySelector<HTMLButtonElement>(".image-picker-item")?.focus();
+}
+
+function closeImagePicker(): void {
+  imagePicker.classList.add("hidden");
+  pageImages = [];
+  imagePickerGrid.replaceChildren();
+}
+
+async function choosePageImage(image: PageImage): Promise<void> {
+  closeImagePicker();
+  await fetchImage(image.url);
+  scheduleDraft();
+}
+
 function applyLanguage(next: Lang): void {
   lang = next;
   document.documentElement.lang = next === "en" ? "en" : "zh-CN";
@@ -143,6 +219,7 @@ function applyLanguage(next: Lang): void {
   renderTags();
   renderContext();
   renderSubmitSuccess();
+  if (!imagePicker.classList.contains("hidden")) renderImagePicker();
 }
 
 function updateAuth(): void {
@@ -457,6 +534,7 @@ async function readTab(): Promise<void> {
     const response = await sendMessage<{
       ok: boolean;
       imageUrl?: string | null;
+      images?: PageImage[];
       selectionText?: string;
       pageUrl?: string;
       pageTitle?: string;
@@ -466,16 +544,16 @@ async function readTab(): Promise<void> {
     if (!response.ok)
       throw new Error(response.error ?? t(lang, "side.error.readPage"));
 
-    if (response.pageUrl && !sourceUrl.value)
-      sourceUrl.value = response.pageUrl;
+    if (response.pageUrl) sourceUrl.value = response.pageUrl;
     if (response.selectionText && !promptText.value)
       promptText.value = response.selectionText;
-    if (response.imageUrl) await fetchImage(response.imageUrl);
-    else
-      showError(
-        imageError,
-        t(lang, "side.error.noImage"),
-      );
+    if (response.images && response.images.length > 0) {
+      openImagePicker(response.images);
+    } else if (response.imageUrl) {
+      await fetchImage(response.imageUrl);
+    } else {
+      showError(imageError, t(lang, "side.error.noImage"));
+    }
     scheduleDraft();
   } catch (error) {
     showError(
@@ -811,6 +889,14 @@ fileInput.addEventListener("change", () => {
   fileInput.value = "";
 });
 $("readTab").addEventListener("click", () => void readTab());
+imagePickerClose.addEventListener("click", closeImagePicker);
+imagePicker.addEventListener("click", (event) => {
+  if (event.target === imagePicker) closeImagePicker();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !imagePicker.classList.contains("hidden"))
+    closeImagePicker();
+});
 $("submit").addEventListener("click", () => void submit());
 $("retryQueue").addEventListener("click", async () => {
   await sendMessage({ type: "PROCESS_QUEUE", force: true });

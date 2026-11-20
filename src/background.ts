@@ -224,8 +224,16 @@ async function fetchImageData(url: string): Promise<string> {
   );
 }
 
+interface PageImage {
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
 async function readActiveTab(): Promise<{
   imageUrl: string | null;
+  images: PageImage[];
   selectionText: string;
   pageUrl: string;
   pageTitle: string;
@@ -236,16 +244,32 @@ async function readActiveTab(): Promise<{
   const [result] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: () => {
+      const seen = new Set<string>();
       const images = [...document.images]
-        .filter((image) => image.currentSrc || image.src)
         .map((image) => ({
           url: image.currentSrc || image.src,
-          area: image.naturalWidth * image.naturalHeight,
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+          alt: image.alt || "",
         }))
-        .sort((a, b) => b.area - a.area);
+        .filter((image) => {
+          if (
+            !image.url ||
+            image.width < 64 ||
+            image.height < 64 ||
+            seen.has(image.url)
+          ) {
+            return false;
+          }
+          seen.add(image.url);
+          return true;
+        })
+        .sort((a, b) => b.width * b.height - a.width * a.height)
+        .slice(0, 60);
 
       return {
         imageUrl: images[0]?.url ?? null,
+        images,
         selectionText: window.getSelection()?.toString() ?? "",
         pageUrl: location.href,
         pageTitle: document.title,
@@ -256,6 +280,7 @@ async function readActiveTab(): Promise<{
   return (
     result?.result ?? {
       imageUrl: null,
+      images: [],
       selectionText: "",
       pageUrl: tab.url ?? "",
       pageTitle: tab.title ?? "",
