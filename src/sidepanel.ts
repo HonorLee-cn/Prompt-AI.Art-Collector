@@ -115,6 +115,8 @@ function renderSubmitSuccess(): void {
   );
   const webBase = (settings?.webBase || "https://prompt-ai.art").replace(/\/+$/, "");
   submitSuccessLink.href = bound ? `${webBase}/me/prompts` : `${webBase}/`;
+  submitSuccessClose.setAttribute("aria-label", t(lang, "side.successClose"));
+  submitSuccessClose.title = t(lang, "side.successClose");
 }
 
 function openSubmitSuccess(): void {
@@ -123,8 +125,12 @@ function openSubmitSuccess(): void {
   submitSuccessLink.focus();
 }
 
-function closeSubmitSuccess(): void {
+async function closeSubmitSuccess(): Promise<void> {
   submitSuccess.classList.add("hidden");
+  clearForm();
+  context = null;
+  renderContext();
+  await sendMessage({ type: "CLEAR_CONTEXT" });
 }
 
 function applyLanguage(next: Lang): void {
@@ -850,7 +856,16 @@ reversePromptButton.addEventListener("click", openReverseConfirm);
 reverseCancelButton.addEventListener("click", closeReverseConfirm);
 reverseStartButton.addEventListener("click", () => void startReverse());
 reverseProgressCancel.addEventListener("click", closeReverseProgress);
-submitSuccessClose.addEventListener("click", closeSubmitSuccess);
+submitSuccessClose.addEventListener("click", () => void closeSubmitSuccess());
+submitSuccessLink.addEventListener("click", () => void closeSubmitSuccess());
+submitSuccess.addEventListener("click", (event) => {
+  if (event.target === submitSuccess) void closeSubmitSuccess();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !submitSuccess.classList.contains("hidden")) {
+    void closeSubmitSuccess();
+  }
+});
 
 chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, area: string) => {
   if (area !== "local") return;

@@ -580,7 +580,31 @@ button {
 }
 
 .success-card {
+  position: relative;
   text-align: center;
+}
+
+.success-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+}
+
+.success-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .success-icon {
