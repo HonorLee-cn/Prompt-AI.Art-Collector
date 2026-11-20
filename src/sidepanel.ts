@@ -694,7 +694,7 @@ async function init(): Promise<void> {
   const draft = await loadDraft();
   if (draft) applyForm(draft);
 
-  if (context?.pageUrl && !sourceUrl.value) sourceUrl.value = context.pageUrl;
+  if (context?.pageUrl) sourceUrl.value = context.pageUrl;
   if (context?.selectionText && !promptText.value)
     promptText.value = context.selectionText;
 
@@ -777,7 +777,7 @@ $("retryQueue").addEventListener("click", async () => {
 });
 $("useContext").addEventListener("click", async () => {
   if (context?.imageUrl) await fetchImage(context.imageUrl);
-  if (context?.pageUrl && !sourceUrl.value) sourceUrl.value = context.pageUrl;
+  if (context?.pageUrl) sourceUrl.value = context.pageUrl;
   if (context?.selectionText && !promptText.value)
     promptText.value = context.selectionText;
   await sendMessage({ type: "CLEAR_CONTEXT" });
@@ -822,6 +822,10 @@ chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unkno
     context = (changes.pendingContext.newValue as PendingContext | undefined) ?? null;
     renderContext();
     if (context) {
+      if (context.pageUrl) {
+        sourceUrl.value = context.pageUrl;
+        scheduleDraft();
+      }
       contextBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }
