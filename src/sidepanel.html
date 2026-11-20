@@ -311,6 +311,36 @@
       </div>
     </div>
 
+    <div
+      id="submitSuccess"
+      class="modal-mask hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="submitSuccessTitle"
+    >
+      <div class="modal-card success-card">
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h2 id="submitSuccessTitle" data-i18n="side.successTitle">收录成功</h2>
+        <p id="submitSuccessBody"></p>
+        <a
+          id="submitSuccessLink"
+          class="primary full success-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        ></a>
+        <div class="row modal-actions">
+          <button
+            id="submitSuccessClose"
+            class="ghost"
+            type="button"
+            data-i18n="side.successClose"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
     <script type="module" src="sidepanel.ts"></script>
   </body>

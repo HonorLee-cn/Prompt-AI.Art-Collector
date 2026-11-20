@@ -578,3 +578,33 @@ button {
     transform: rotate(360deg);
   }
 }
+
+.success-card {
+  text-align: center;
+}
+
+.success-icon {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  margin: 2px auto 12px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.success-card p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.success-link {
+  display: block;
+  margin-top: 16px;
+  text-align: center;
+  text-decoration: none;
+}

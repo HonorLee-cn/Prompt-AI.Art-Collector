@@ -69,6 +69,10 @@ const reverseCancelButton = $<HTMLButtonElement>("reverseCancel");
 const reverseProgress = $<HTMLElement>("reverseProgress");
 const reverseStatus = $<HTMLElement>("reverseStatus");
 const reverseProgressCancel = $<HTMLButtonElement>("reverseProgressCancel");
+const submitSuccess = $<HTMLElement>("submitSuccess");
+const submitSuccessBody = $<HTMLElement>("submitSuccessBody");
+const submitSuccessLink = $<HTMLAnchorElement>("submitSuccessLink");
+const submitSuccessClose = $<HTMLButtonElement>("submitSuccessClose");
 
 interface ReverseResult {
   title?: string;
@@ -99,6 +103,30 @@ function showError(element: HTMLElement, message: string): void {
   element.classList.toggle("hidden", !message);
 }
 
+function renderSubmitSuccess(): void {
+  const bound = Boolean(settings?.user);
+  submitSuccessBody.textContent = t(
+    lang,
+    bound ? "side.successBodyBound" : "side.successBodyGuest",
+  );
+  submitSuccessLink.textContent = t(
+    lang,
+    bound ? "side.successOpenMine" : "side.successOpenSite",
+  );
+  const webBase = (settings?.webBase || "https://prompt-ai.art").replace(/\/+$/, "");
+  submitSuccessLink.href = bound ? `${webBase}/me/prompts` : `${webBase}/`;
+}
+
+function openSubmitSuccess(): void {
+  renderSubmitSuccess();
+  submitSuccess.classList.remove("hidden");
+  submitSuccessLink.focus();
+}
+
+function closeSubmitSuccess(): void {
+  submitSuccess.classList.add("hidden");
+}
+
 function applyLanguage(next: Lang): void {
   lang = next;
   document.documentElement.lang = next === "en" ? "en" : "zh-CN";
@@ -108,6 +136,7 @@ function applyLanguage(next: Lang): void {
   updateBadge();
   renderTags();
   renderContext();
+  renderSubmitSuccess();
 }
 
 function updateAuth(): void {
@@ -530,9 +559,9 @@ async function submit(): Promise<void> {
   }>({ type: "SUBMIT", item });
 
   if (response.ok) {
-    showToast(t(lang, "side.toast.success"));
     clearForm();
     await refreshState();
+    openSubmitSuccess();
     return;
   }
 
@@ -821,6 +850,7 @@ reversePromptButton.addEventListener("click", openReverseConfirm);
 reverseCancelButton.addEventListener("click", closeReverseConfirm);
 reverseStartButton.addEventListener("click", () => void startReverse());
 reverseProgressCancel.addEventListener("click", closeReverseProgress);
+submitSuccessClose.addEventListener("click", closeSubmitSuccess);
 
 chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, area: string) => {
   if (area !== "local") return;
