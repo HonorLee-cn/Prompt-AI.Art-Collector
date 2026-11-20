@@ -158,7 +158,17 @@
       </section>
 
       <section class="card">
-        <h2 data-i18n="side.formTitle">收录信息</h2>
+        <div class="row-between">
+          <h2 data-i18n="side.formTitle">收录信息</h2>
+          <button
+            id="reversePrompt"
+            class="link reverse-action"
+            type="button"
+            data-i18n="side.reverse"
+          >
+            反推提示词
+          </button>
+        </div>
         <label
           ><span data-i18n="side.titleLabel">标题</span
           ><input id="title" type="text" maxlength="200"
@@ -241,6 +251,65 @@
         </p>
       </section>
     </main>
+
+    <div
+      id="reverseConfirm"
+      class="modal-mask hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reverseConfirmTitle"
+    >
+      <div class="modal-card">
+        <h2 id="reverseConfirmTitle" data-i18n="side.reverseConfirmTitle">
+          确认反推提示词
+        </h2>
+        <p class="muted small" data-i18n="side.reverseConfirmBody">
+          将使用当前图片调用 AI 反推，并自动填入标题、提示词和 NSFW。是否继续？
+        </p>
+        <div class="row gap modal-actions">
+          <button
+            id="reverseCancel"
+            class="ghost"
+            type="button"
+            data-i18n="side.reverseCancel"
+          >
+            取消
+          </button>
+          <button
+            id="reverseStart"
+            class="primary"
+            type="button"
+            data-i18n="side.reverseStart"
+          >
+            开始反推
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="reverseProgress"
+      class="modal-mask hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reverseProgressTitle"
+    >
+      <div class="modal-card reverse-progress">
+        <div class="spinner" aria-hidden="true"></div>
+        <h2 id="reverseProgressTitle" data-i18n="side.reverseProgressTitle">
+          正在反推提示词
+        </h2>
+        <p id="reverseStatus" class="muted small"></p>
+        <button
+          id="reverseProgressCancel"
+          class="ghost"
+          type="button"
+          data-i18n="side.reverseCancel"
+        >
+          取消
+        </button>
+      </div>
+    </div>
 
     <div id="toast" class="toast hidden"></div>
     <script type="module" src="sidepanel.ts"></script>

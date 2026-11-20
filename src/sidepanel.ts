@@ -62,6 +62,30 @@ const queueBadge = $<HTMLElement>("queueBadge");
 const queueText = $<HTMLElement>("queueText");
 const retryQueue = $<HTMLButtonElement>("retryQueue");
 const toastElement = $<HTMLElement>("toast");
+const reversePromptButton = $<HTMLButtonElement>("reversePrompt");
+const reverseConfirm = $<HTMLElement>("reverseConfirm");
+const reverseStartButton = $<HTMLButtonElement>("reverseStart");
+const reverseCancelButton = $<HTMLButtonElement>("reverseCancel");
+const reverseProgress = $<HTMLElement>("reverseProgress");
+const reverseStatus = $<HTMLElement>("reverseStatus");
+const reverseProgressCancel = $<HTMLButtonElement>("reverseProgressCancel");
+
+interface ReverseResult {
+  title?: string;
+  promptZh?: string;
+  promptEn?: string;
+  nsfwLevel?: number;
+}
+
+interface ReverseJob {
+  id: string;
+  status: string;
+  result?: ReverseResult | null;
+  errorMessage?: string | null;
+}
+
+let reverseRun = 0;
+let reverseLanguage: Lang = "zh";
 
 function showToast(message: string, tone: "info" | "error" = "info"): void {
   toastElement.textContent = message;
@@ -527,6 +551,124 @@ async function submit(): Promise<void> {
   showError(formError, message);
 }
 
+function openReverseConfirm(): void {
+  showError(formError, "");
+  if (!imageDataUrl) {
+    showError(imageError, t(lang, "side.reverseNeedImage"));
+    imageDrop.focus();
+    return;
+  }
+  if (!settings?.apiKey) {
+    showError(formError, t(lang, "side.reverseNeedKey"));
+    settingsPanel.classList.remove("hidden");
+    return;
+  }
+  reverseConfirm.classList.remove("hidden");
+  reverseStartButton.focus();
+}
+
+function closeReverseConfirm(): void {
+  reverseConfirm.classList.add("hidden");
+}
+
+function closeReverseProgress(): void {
+  reverseRun += 1;
+  reverseProgress.classList.add("hidden");
+}
+
+function reverseStatusText(status: string): string {
+  if (status === "succeeded") return t(lang, "side.reverseDone");
+  if (status === "failed" || status === "cancelled") return t(lang, "side.reverseFailed");
+  if (status === "running") return t(lang, "side.reverseRunning");
+  return t(lang, "side.reverseQueued");
+}
+
+function applyReverseResult(job: ReverseJob): void {
+  const result = job.result;
+  if (!result) throw new Error(t(lang, "side.reverseFailed"));
+  titleInput.value = result.title ?? "";
+  const zh = result.promptZh ?? "";
+  const en = result.promptEn ?? "";
+  promptText.value =
+    reverseLanguage === "en" ? en || zh : zh || en;
+  selectedTagValues = [];
+  nsfwValue = Number(result.nsfwLevel ?? 0);
+  renderTags();
+  scheduleDraft();
+}
+
+const wait = (ms: number): Promise<void> =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
+async function pollReverseJob(id: string, run: number): Promise<void> {
+  const startedAt = Date.now();
+  while (run === reverseRun) {
+    if (Date.now() - startedAt > 5 * 60_000) {
+      throw new Error(t(lang, "side.reverseTimeout"));
+    }
+
+    const response = await sendMessage<{
+      ok: boolean;
+      job?: ReverseJob;
+      error?: string;
+    }>({ type: "GET_REVERSE_JOB", id });
+    if (!response.ok || !response.job) {
+      throw new Error(response.error ?? t(lang, "side.reverseFailed"));
+    }
+    if (run !== reverseRun) return;
+
+    const job = response.job;
+    reverseStatus.textContent = reverseStatusText(job.status);
+    if (job.status === "succeeded") {
+      applyReverseResult(job);
+      reverseProgress.classList.add("hidden");
+      showToast(t(lang, "side.reverseDone"));
+      titleInput.focus();
+      return;
+    }
+    if (job.status === "failed" || job.status === "cancelled") {
+      throw new Error(job.errorMessage || t(lang, "side.reverseFailed"));
+    }
+    await wait(1500);
+  }
+}
+
+async function startReverse(): Promise<void> {
+  closeReverseConfirm();
+  const run = ++reverseRun;
+  reverseLanguage = lang;
+  reverseProgress.classList.remove("hidden");
+  reverseStatus.textContent = t(lang, "side.reverseQueued");
+  showError(formError, "");
+
+  try {
+    const response = await sendMessage<{
+      ok: boolean;
+      job?: ReverseJob;
+      error?: string;
+      code?: string;
+    }>({
+      type: "REVERSE_IMAGE",
+      imageDataUrl,
+      language: reverseLanguage,
+    });
+
+    if (run !== reverseRun) return;
+    if (!response.ok || !response.job) {
+      throw new Error(response.error ?? t(lang, "side.reverseFailed"));
+    }
+    reverseStatus.textContent = reverseStatusText(response.job.status);
+    await pollReverseJob(response.job.id, run);
+  } catch (error) {
+    if (run !== reverseRun) return;
+    reverseProgress.classList.add("hidden");
+    const message =
+      error instanceof Error ? error.message : t(lang, "side.reverseFailed");
+    showError(formError, message);
+    showToast(message, "error");
+  }
+}
+
 async function refreshState(): Promise<void> {
   const response = await sendMessage<{
     ok: boolean;
@@ -667,6 +809,11 @@ imageDrop.addEventListener("drop", (event) => {
 window.addEventListener("beforeunload", () => {
   if (!loading) void saveDraft(readForm());
 });
+
+reversePromptButton.addEventListener("click", openReverseConfirm);
+reverseCancelButton.addEventListener("click", closeReverseConfirm);
+reverseStartButton.addEventListener("click", () => void startReverse());
+reverseProgressCancel.addEventListener("click", closeReverseProgress);
 
 bindLangSwitch((next) => applyLanguage(next));
 void init();

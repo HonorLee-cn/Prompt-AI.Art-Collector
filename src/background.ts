@@ -436,6 +436,48 @@ chrome.runtime.onMessage.addListener(
             }
             break;
           }
+          case "REVERSE_IMAGE": {
+            const settings = await loadSettings();
+            if (!settings.apiKey) {
+              sendResponse({
+                ok: false,
+                code: 'AUTH_REQUIRED',
+                error: t(currentLang, 'side.reverseNeedKey'),
+              });
+              break;
+            }
+
+            const imageDataUrl = String(message.imageDataUrl ?? '');
+            if (!imageDataUrl) {
+              sendResponse({
+                ok: false,
+                code: 'VALIDATION_FAILED',
+                error: t(currentLang, 'side.reverseNeedImage'),
+              });
+              break;
+            }
+
+            const form = new FormData();
+            form.append('file', dataUrlToBlob(imageDataUrl), 'reverse.jpg');
+            form.append('language', message.language === 'en' ? 'en' : 'zh');
+            const response = await apiFetch(settings, '/ai/reverse', {
+              method: 'POST',
+              body: form,
+            });
+            sendResponse({ ok: true, job: response?.job });
+            break;
+          }
+          case "GET_REVERSE_JOB": {
+            const settings = await loadSettings();
+            const id = String(message.id ?? '');
+            if (!id) {
+              sendResponse({ ok: false, error: 'Missing job id' });
+              break;
+            }
+            const response = await apiFetch(settings, `/ai/jobs/${id}`);
+            sendResponse({ ok: true, job: response?.job });
+            break;
+          }
           case "PROCESS_QUEUE": {
             sendResponse({
               ok: true,
