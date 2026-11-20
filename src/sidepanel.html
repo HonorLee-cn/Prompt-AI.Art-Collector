@@ -103,28 +103,6 @@
         </div>
       </section>
 
-      <section id="contextBanner" class="card context-card hidden">
-        <p id="contextText" class="small"></p>
-        <div class="row gap">
-          <button
-            id="useContext"
-            class="primary small-btn"
-            type="button"
-            data-i18n="side.contextUse"
-          >
-            使用右键内容
-          </button>
-          <button
-            id="dismissContext"
-            class="ghost small-btn"
-            type="button"
-            data-i18n="side.contextDismiss"
-          >
-            忽略
-          </button>
-        </div>
-      </section>
-
       <section class="card">
         <div class="row-between">
           <h2 data-i18n="side.imageTitle">图片</h2>
@@ -308,6 +286,39 @@
         >
           取消
         </button>
+      </div>
+    </div>
+
+    <div
+      id="contextModal"
+      class="modal-mask hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="contextModalTitle"
+    >
+      <div class="modal-card">
+        <h2 id="contextModalTitle" data-i18n="side.contextTitle">
+          发现右键内容
+        </h2>
+        <p id="contextText" class="small muted"></p>
+        <div class="row gap modal-actions">
+          <button
+            id="useContext"
+            class="primary small-btn"
+            type="button"
+            data-i18n="side.contextUse"
+          >
+            使用右键内容
+          </button>
+          <button
+            id="dismissContext"
+            class="ghost small-btn"
+            type="button"
+            data-i18n="side.contextDismiss"
+          >
+            忽略
+          </button>
+        </div>
       </div>
     </div>
 

@@ -36,7 +36,7 @@ const authState = $<HTMLElement>("authState");
 const authText = $<HTMLElement>("authText");
 const boundBadge = $<HTMLElement>("boundBadge");
 const boundNote = $<HTMLElement>("boundNote");
-const contextBanner = $<HTMLElement>("contextBanner");
+const contextModal = $<HTMLElement>("contextModal");
 const contextText = $<HTMLElement>("contextText");
 const imagePreview = $<HTMLImageElement>("imagePreview");
 const dropHint = $<HTMLElement>("dropHint");
@@ -284,11 +284,11 @@ async function loadTags(): Promise<void> {
 
 function renderContext(): void {
   if (!context) {
-    contextBanner.classList.add("hidden");
+    contextModal.classList.add("hidden");
     return;
   }
 
-  contextBanner.classList.remove("hidden");
+  contextModal.classList.remove("hidden");
   const parts = [];
   if (context.imageUrl) parts.push(t(lang, "side.context.image"));
   if (context.selectionText)
@@ -879,7 +879,7 @@ chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unkno
       clearForm();
       if (context.pageUrl) sourceUrl.value = context.pageUrl;
       scheduleDraft();
-      contextBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      contextModal.querySelector<HTMLButtonElement>("#useContext")?.focus();
     }
   }
 
