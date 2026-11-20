@@ -692,7 +692,14 @@ async function init(): Promise<void> {
   await refreshState();
 
   const draft = await loadDraft();
-  if (draft) applyForm(draft);
+  const contextIsNewer =
+    context != null && (!draft || (context.createdAt ?? 0) > (draft.savedAt ?? 0));
+
+  if (contextIsNewer) {
+    clearForm();
+  } else if (draft) {
+    applyForm(draft);
+  }
 
   if (context?.pageUrl) sourceUrl.value = context.pageUrl;
   if (context?.selectionText && !promptText.value)
