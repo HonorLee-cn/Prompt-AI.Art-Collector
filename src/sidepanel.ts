@@ -822,10 +822,11 @@ chrome.storage.onChanged.addListener((changes: Record<string, { newValue?: unkno
     context = (changes.pendingContext.newValue as PendingContext | undefined) ?? null;
     renderContext();
     if (context) {
-      if (context.pageUrl) {
-        sourceUrl.value = context.pageUrl;
-        scheduleDraft();
-      }
+      // A new context-menu collection starts a fresh entry so old fields
+      // cannot be submitted together with the new image.
+      clearForm();
+      if (context.pageUrl) sourceUrl.value = context.pageUrl;
+      scheduleDraft();
       contextBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }
