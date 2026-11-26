@@ -1,3 +1,5 @@
+import { APP_CONFIG } from "./config";
+
 export interface ExtensionUser {
   id: string;
   username: string;
@@ -69,9 +71,8 @@ const LANG_KEY = "lang";
 export type Lang = "zh" | "en";
 
 export const DEFAULT_SETTINGS: Settings = {
-  // Local test defaults. Change both to the production domain before packaging.
-  apiBase: "http://localhost:3100",
-  webBase: "http://localhost:5174",
+  apiBase: APP_CONFIG.apiBase,
+  webBase: APP_CONFIG.webBase,
   apiKey: "",
   user: null,
 };

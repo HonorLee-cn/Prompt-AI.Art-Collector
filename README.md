@@ -28,7 +28,7 @@ pnpm build:extension
 - 本地测试默认连接：
   - API：`http://localhost:3100`
   - 网站：`http://localhost:5174`
-- 打包上线前，把 `src/shared.ts` 里的 `DEFAULT_SETTINGS` 统一改为正式域名。
+- 部署常量集中在 `src/config.ts` 的 `APP_CONFIG`；打包上线前改这里的 `apiBase` / `webBase`。
 - API Key 失效会提示，草稿保留。
 
 不绑定 Key 也可提交：会匿名进入后台待审核区（归属 system）。绑定后收录归属本人，提交后默认进入待审核队列，不再自动公开。

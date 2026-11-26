@@ -14,6 +14,7 @@ import {
   type SubmitPayload,
 } from "./shared";
 import { t } from "./i18n";
+import { APP_CONFIG } from "./config";
 
 let currentLang: Lang = "zh";
 void loadLang().then((lang) => {
@@ -534,9 +535,9 @@ chrome.runtime.onMessage.addListener(
             const settings = await loadSettings();
             let response: any;
             try {
-              response = await apiFetch(settings, "/tags/all?limit=500");
+              response = await apiFetch(settings, `/tags/all?limit=${APP_CONFIG.cloudTagLimit}`);
             } catch {
-              response = await apiFetch(settings, "/tags?limit=200");
+              response = await apiFetch(settings, `/tags?limit=${APP_CONFIG.cloudTagFallbackLimit}`);
             }
             const tags = (response?.data ?? [])
               .map((tag: any) => ({

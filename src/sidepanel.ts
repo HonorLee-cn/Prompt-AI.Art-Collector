@@ -12,6 +12,7 @@ import {
   type TagOption,
 } from "./shared";
 import { applyI18n, bindLangSwitch, markLangSwitch, t } from "./i18n";
+import { APP_CONFIG } from "./config";
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -57,7 +58,7 @@ const queueRow = $<HTMLElement>("queueRow");
 let availableTags: TagOption[] = [];
 let selectedTagValues: string[] = [];
 let nsfwValue = 0;
-const MAX_TAGS = 10;
+const MAX_TAGS = APP_CONFIG.maxTags;
 const formError = $<HTMLElement>("formError");
 const queueBadge = $<HTMLElement>("queueBadge");
 const queueText = $<HTMLElement>("queueText");
@@ -127,7 +128,7 @@ function renderSubmitSuccess(): void {
     lang,
     bound ? "side.successOpenMine" : "side.successOpenSite",
   );
-  const webBase = (settings?.webBase || "https://prompt-ai.art").replace(/\/+$/, "");
+  const webBase = (settings?.webBase || APP_CONFIG.webBase).replace(/\/+$/, "");
   submitSuccessLink.href = bound ? `${webBase}/me/prompts` : `${webBase}/`;
   submitSuccessClose.setAttribute("aria-label", t(lang, "side.successClose"));
   submitSuccessClose.title = t(lang, "side.successClose");
@@ -731,7 +732,7 @@ const wait = (ms: number): Promise<void> =>
 async function pollReverseJob(id: string, run: number): Promise<void> {
   const startedAt = Date.now();
   while (run === reverseRun) {
-    if (Date.now() - startedAt > 5 * 60_000) {
+    if (Date.now() - startedAt > APP_CONFIG.reverseTimeoutMs) {
       throw new Error(t(lang, "side.reverseTimeout"));
     }
 
@@ -757,7 +758,7 @@ async function pollReverseJob(id: string, run: number): Promise<void> {
     if (job.status === "failed" || job.status === "cancelled") {
       throw new Error(job.errorMessage || t(lang, "side.reverseFailed"));
     }
-    await wait(1500);
+    await wait(APP_CONFIG.reversePollMs);
   }
 }
 
