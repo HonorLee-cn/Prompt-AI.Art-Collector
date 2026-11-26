@@ -6,9 +6,9 @@
  */
 export const APP_CONFIG = {
   /** Prompt-AI.ART API origin. */
-  apiBase: "http://localhost:3100",
+  apiBase: "https://prompt-ai.art",
   /** Prompt-AI.ART website origin. */
-  webBase: "http://localhost:5174",
+  webBase: "https://prompt-ai.art",
   /** Maximum number of tags accepted by the collector. */
   maxTags: 10,
   /** Maximum number of tags requested from the cloud tag proxy. */

@@ -25,10 +25,10 @@ pnpm build:extension
 
 - 只配置 API Key。
 - 点「获取 API KEY」会打开网站的 API Key 页面；未登录网站会先进入登录页。
-- 本地测试默认连接：
-  - API：`http://localhost:3100`
-  - 网站：`http://localhost:5174`
-- 部署常量集中在 `src/config.ts` 的 `APP_CONFIG`；打包上线前改这里的 `apiBase` / `webBase`。
+- 生产默认连接：
+  - API：`https://prompt-ai.art`
+  - 网站：`https://prompt-ai.art`
+- 部署常量集中在 `src/config.ts` 的 `APP_CONFIG`。本地联调时临时改为 `http://localhost:3100` / `http://localhost:5174`，提交/打包前必须还原为生产域名。
 - API Key 失效会提示，草稿保留。
 
 不绑定 Key 也可提交：会匿名进入后台待审核区（归属 system）。绑定后收录归属本人，提交后默认进入待审核队列，不再自动公开。
